@@ -9,6 +9,7 @@ from lab1.generator import Generator
 from lab1 import distributions
 from lab1.modeller import Modeller
 from lab1.processor import Processor
+import time
 
 
 class mywindow(QMainWindow):
@@ -21,25 +22,27 @@ class mywindow(QMainWindow):
         self.pushButton_graph.clicked.connect(self.graph_button_clicked)
 
     def graph_button_clicked(self):
-        n_repeats = 10
+        start = time.time()
 
-        # how_to_check = 'requests'
-        # end_param = 1000
-        end_param = self.input_t.value()
-        self.radioButton_t: QRadioButton
-        if self.radioButton_t.isChecked():
-            how_to_check = 'time'
-        else:
-            how_to_check = 'requests'
+        # 2 минуты
+        n_repeats = 100
+        how_to_check = 'time'
+        end_param = 1000
+
+        # end_param = self.input_t.value()
+        # if self.radioButton_t.isChecked():
+        #     how_to_check = 'time'
+        # else:
+        #     how_to_check = 'requests'
 
         intens_processor = 1
         disp_processor = 0
         self.input_intens_processor.setValue(intens_processor)
         self.input_disp_processor.setValue(disp_processor)
 
-        intens_generator = 0.02
-        intens_generator_step = 0.02
-        p_theor_max = 1.2
+        intens_generator = 0.01
+        intens_generator_step = 0.03
+        p_theor_max = 1.1
         p_theor2 = intens_generator / intens_processor
 
         p_theor_array = []
@@ -63,6 +66,8 @@ class mywindow(QMainWindow):
             intens_generator += intens_generator_step
             p_theor2 = intens_generator / intens_processor
 
+        end = time.time()
+        print(f'Построение графика заняло {round(end - start)} секунд')
         plt.plot(p_theor_array, t_mean_array)
         plt.title('Зависимость среднего время ожидания в очереди от загрузки системы\n'
                   f'({how_to_check}={end_param})')
@@ -75,12 +80,11 @@ class mywindow(QMainWindow):
         generators = []
         processors = []
 
-        # TODO проверить
         # матожидание экспоненциального распределения = 1 / lambda
         # интенсивность = 1 / матожидание экспоненциального распределения
         # lambda = интенсивность
         generator_intensity = self.input_intens_generator.value()
-        lambda_ = 1 / generator_intensity
+        lambda_ = generator_intensity
         generator = Generator(distributions.ExponentialDistribution(lambda_))
 
         generators.append(generator)
@@ -119,14 +123,9 @@ class mywindow(QMainWindow):
             p_fact = result['p_fact']
             self.res_fact_zagr.setText(str(round(p_fact, round_to)))
 
-            # TODO надо ли
-            # self.ui.teor_time.setText(str(round(p_theor / (1 - p_theor) / generator_intensity, r)))
-            # self.ui.fact_time.setText(str(round(result[7], 4)))
-
             self.res_exp_requests_amount.setText(str(result['processed_requests']))
             self.res_exp_modelling_time.setText(str(round(result['modeling_time'], round_to)))
             self.res_exp_mean_time_in_queue.setText(str(round(result['mean_time_in_queue'], round_to)))
-            self.res_exp_mean_time_in_smo.setText(str(round(result['mean_time_in_smo'], round_to)))
 
             # TODO
             if how_to_check == 'requests':
@@ -136,12 +135,18 @@ class mywindow(QMainWindow):
                 self.res_theor_modelling_time.setText(str(round(res_theor_modelling_time, round_to)))
             else:
                 self.res_theor_modelling_time.setText(str(end_param))
-                res_theor_requests_amount = (end_param - 1 / max([generator_intensity, processor_intensity]) +
-                                             end_param * min([generator_intensity, processor_intensity]))
-                self.res_theor_requests_amount.setText(str(round(res_theor_requests_amount, round_to)))
+                res_theor_requests_amount = ((end_param - 1 / max([generator_intensity, processor_intensity]))
+                                             * min([generator_intensity, processor_intensity]))
+                self.res_theor_requests_amount.setText(str(int(res_theor_requests_amount)))
 
-            self.res_theor_mean_time_in_queue.setText(str(round(result['mean_time_in_queue'], round_to)))
-            self.res_theor_mean_time_in_smo.setText(str(round(result['mean_time_in_smo'], round_to)))
+            # if p_theor < 1:
+            #     # https://studfile.net/preview/9196366/page:5/
+            #     res_theor_mean_time_in_queue = 1 / processor_intensity / (1 - p_theor)
+            #     self.res_theor_mean_time_in_queue.setText(str(round(res_theor_mean_time_in_queue, round_to)))
+            # else:
+            #     self.res_theor_mean_time_in_queue.setText('')
+
+
 
         except Exception as e:
             error_msg = QMessageBox()
@@ -156,5 +161,3 @@ if __name__ == "__main__":
     application.show()
 
     sys.exit(app.exec())
-
-# TODO загруженность, среднее время пребывания в системе, общее время моделирования, число обработанных заявок

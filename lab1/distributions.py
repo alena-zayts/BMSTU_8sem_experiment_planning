@@ -12,7 +12,7 @@ class ExponentialDistribution(AbstractDistribution):
 
     def generate_time(self):
         # scale = 1 / lambda
-        return np.random.exponential(self._lambda)
+        return np.random.exponential(1 / self._lambda)
 
 
 class NormalDistribution(AbstractDistribution):
