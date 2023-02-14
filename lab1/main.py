@@ -42,7 +42,7 @@ class mywindow(QMainWindow):
 
         intens_generator = 0.01
         intens_generator_step = 0.03
-        p_theor_max = 1.1
+        p_theor_max = 1
         p_theor2 = intens_generator / intens_processor
 
         p_theor_array = []

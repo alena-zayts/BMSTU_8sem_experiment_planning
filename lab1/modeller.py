@@ -72,15 +72,19 @@ class Modeller:
         times_in_smo = [times_ended_processing[i] - times_generated[i] for i in range(len(times_ended_processing))]
         mean_time_in_smo = sum(times_in_smo) / len(times_in_smo)
 
-        lambda_fact2 = 1 / (sum(generator.time_periods) / len(generator.time_periods))
-        mu_fact2 = 1 / (sum(processor.time_periods) / len(processor.time_periods))
-        p_fact2 = lambda_fact2 / mu_fact2
-
+        # 3
+        p_fact2 = sum(processor.time_periods) / current_modeling_time
+        # 2
+        # lambda_fact2 = 1 / (sum(generator.time_periods) / len(generator.time_periods))
+        # mu_fact2 = 1 / (sum(processor.time_periods) / len(processor.time_periods))
+        # p_fact2 = lambda_fact2 / mu_fact2
+        # 1
         # lambda_fact = len(times_generated) / current_modeling_time
         # mu_fact = 1 / mean_time_in_processor
         # p_fact = lambda_fact / mu_fact
         # print(f'Экспериментальные: lambda {lambda_fact}, mu {mu_fact}')
-        #
+
+
         # print(lambda_fact, mu_fact, p_fact)
         # print(lambda_fact2, mu_fact2, p_fact2)
         # print()
