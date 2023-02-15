@@ -11,6 +11,8 @@ from lab1.modeller import Modeller
 from lab1.processor import Processor
 import time
 
+show = True
+
 
 class mywindow(QMainWindow):
     def __init__(self):
@@ -20,6 +22,14 @@ class mywindow(QMainWindow):
 
         self.pushButton_model.clicked.connect(self.modeling_button_clicked)
         self.pushButton_graph.clicked.connect(self.graph_button_clicked)
+
+        if not show:
+            if hasattr(self, 'res_theor_requests_amount'):
+                self.res_theor_requests_amount.hide()
+            if hasattr(self, 'res_theor_modelling_time'):
+                self.res_theor_modelling_time.hide()
+            if hasattr(self, 'res_theor_mean_time_in_queue'):
+                self.res_theor_mean_time_in_queue.hide()
 
     def graph_button_clicked(self):
         start = time.time()
@@ -47,7 +57,7 @@ class mywindow(QMainWindow):
 
         p_theor_array = []
         t_mean_array = []
-        while p_theor2 <= p_theor_max:
+        while p_theor2 <= p_theor_max + 0.001:
 
             print(intens_generator)
 
@@ -127,24 +137,38 @@ class mywindow(QMainWindow):
             self.res_exp_modelling_time.setText(str(round(result['modeling_time'], round_to)))
             self.res_exp_mean_time_in_queue.setText(str(round(result['mean_time_in_queue'], round_to)))
 
-            # TODO
-            if how_to_check == 'requests':
-                self.res_theor_requests_amount.setText(str(end_param))
-                res_theor_modelling_time = (1 / max([generator_intensity, processor_intensity]) +
-                                            end_param / min([generator_intensity, processor_intensity]))
-                self.res_theor_modelling_time.setText(str(round(res_theor_modelling_time, round_to)))
-            else:
-                self.res_theor_modelling_time.setText(str(end_param))
-                res_theor_requests_amount = ((end_param - 1 / max([generator_intensity, processor_intensity]))
-                                             * min([generator_intensity, processor_intensity]))
-                self.res_theor_requests_amount.setText(str(int(res_theor_requests_amount)))
+            if show:
+                # TODO
+                if p_theor < 1:
+                    if how_to_check == 'requests':
+                        res_theor_requests_amount = str(end_param)
 
-            # if p_theor < 1:
-            #     # https://studfile.net/preview/9196366/page:5/
-            #     res_theor_mean_time_in_queue = 1 / processor_intensity / (1 - p_theor)
-            #     self.res_theor_mean_time_in_queue.setText(str(round(res_theor_mean_time_in_queue, round_to)))
-            # else:
-            #     self.res_theor_mean_time_in_queue.setText('')
+                        res_theor_modelling_time = (1 / max([generator_intensity, processor_intensity]) +
+                                                    end_param / min([generator_intensity, processor_intensity]))
+                        res_theor_modelling_time = str(round(res_theor_modelling_time))
+
+                    else:
+                        res_theor_modelling_time = str(end_param)
+
+                        res_theor_requests_amount = ((end_param - 1 / max([generator_intensity, processor_intensity]))
+                                                     * min([generator_intensity, processor_intensity]))
+                        res_theor_requests_amount = str(int(res_theor_requests_amount))
+
+                    # https://studfile.net/preview/9196366/page:5/
+                    # res_theor_mean_time_in_queue = 1 / processor_intensity / (1 - p_theor)
+                    # https://en.wikipedia.org/wiki/M/D/1_queue
+                    res_theor_mean_time_in_queue = p_theor / (2 * processor_intensity * (1 - p_theor))
+                    res_theor_mean_time_in_queue = str(round(res_theor_mean_time_in_queue, round_to))
+
+                else:
+                    res_theor_mean_time_in_queue = ''
+                    res_theor_requests_amount = ''
+                    res_theor_modelling_time = ''
+
+                self.res_theor_requests_amount.setText(res_theor_requests_amount)
+                self.res_theor_modelling_time.setText(res_theor_modelling_time)
+                self.res_theor_mean_time_in_queue.setText(res_theor_mean_time_in_queue)
+
 
 
 
