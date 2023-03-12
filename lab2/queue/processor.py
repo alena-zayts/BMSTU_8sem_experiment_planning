@@ -1,4 +1,4 @@
-from lab1 import distributions
+from lab2.queue import distributions
 
 
 class Processor:
@@ -15,13 +15,6 @@ class Processor:
 
         self.processed_requests += 1
         self.current_queue_size -= 1
-
-        # if self.current_queue_size > 0:
-        #     self.processed_requests += 1
-        #     self.current_queue_size -= 1
-        #     return True
-        #
-        # return False
 
     def receive_request(self) -> None:
         self.current_queue_size += 1
