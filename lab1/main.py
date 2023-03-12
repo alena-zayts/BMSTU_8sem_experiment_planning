@@ -45,36 +45,35 @@ class mywindow(QMainWindow):
         # else:
         #     how_to_check = 'requests'
 
-        intens_processor = 1
+        intens_generator = 1
+        self.input_intens_generator.setValue(intens_generator)
         disp_processor = 0
-        self.input_intens_processor.setValue(intens_processor)
         self.input_disp_processor.setValue(disp_processor)
 
-        intens_generator = 0.01
-        intens_generator_step = 0.03
+        intens_p_step = 0.03
         p_theor_max = 1
-        p_theor2 = intens_generator / intens_processor
+        p_theor2 = 0.01
 
         p_theor_array = []
         t_mean_array = []
-        while p_theor2 <= p_theor_max + 0.001:
+        while p_theor2 < p_theor_max + 0.001:
 
-            print(intens_generator)
+            intens_processor = intens_generator / p_theor2
+            print(p_theor2)
 
-            self.input_intens_generator.setValue(intens_generator)
+            self.input_intens_processor.setValue(intens_processor)
             current_results = []
 
             for _ in range(n_repeats):
                 generators, processors = self.create_generators_and_processors()
                 model = Modeller(generators, processors)
-                mean_time_in_queue = model.time_based_modelling(how_to_check, end_param)['mean_time_in_queue']
+                mean_time_in_queue = model.delta_t_modelling(how_to_check, end_param)['mean_time_in_queue']
                 current_results.append(mean_time_in_queue)
 
             p_theor_array.append(p_theor2)
             t_mean_array.append(sum(current_results) / n_repeats)
 
-            intens_generator += intens_generator_step
-            p_theor2 = intens_generator / intens_processor
+            p_theor2 += intens_p_step
 
         end = time.time()
         print(f'Построение графика заняло {round(end - start)} секунд')
@@ -85,6 +84,61 @@ class mywindow(QMainWindow):
         plt.ylabel('Среднее время ожидания в очереди (модельное время)')
         plt.xlabel('Загрузка системы')
         plt.show()
+
+    # def graph_button_clicked(self):
+    #     start = time.time()
+    #
+    #     # 2 минуты
+    #     n_repeats = 100
+    #     how_to_check = 'time'
+    #     end_param = 1000
+    #
+    #     # end_param = self.input_t.value()
+    #     # if self.radioButton_t.isChecked():
+    #     #     how_to_check = 'time'
+    #     # else:
+    #     #     how_to_check = 'requests'
+    #
+    #     intens_processor = 1
+    #     disp_processor = 0
+    #     self.input_intens_processor.setValue(intens_processor)
+    #     self.input_disp_processor.setValue(disp_processor)
+    #
+    #     intens_generator = 0.01
+    #     intens_generator_step = 0.03
+    #     p_theor_max = 1
+    #     p_theor2 = intens_generator / intens_processor
+    #
+    #     p_theor_array = []
+    #     t_mean_array = []
+    #     while p_theor2 <= p_theor_max + 0.001:
+    #
+    #         print(intens_generator)
+    #
+    #         self.input_intens_generator.setValue(intens_generator)
+    #         current_results = []
+    #
+    #         for _ in range(n_repeats):
+    #             generators, processors = self.create_generators_and_processors()
+    #             model = Modeller(generators, processors)
+    #             mean_time_in_queue = model.time_based_modelling(how_to_check, end_param)['mean_time_in_queue']
+    #             current_results.append(mean_time_in_queue)
+    #
+    #         p_theor_array.append(p_theor2)
+    #         t_mean_array.append(sum(current_results) / n_repeats)
+    #
+    #         intens_generator += intens_generator_step
+    #         p_theor2 = intens_generator / intens_processor
+    #
+    #     end = time.time()
+    #     print(f'Построение графика заняло {round(end - start)} секунд')
+    #     plt.plot(p_theor_array, t_mean_array)
+    #     plt.title('Зависимость среднего время ожидания в очереди от загрузки системы\n'
+    #               f'({how_to_check}={end_param})')
+    #     plt.grid()
+    #     plt.ylabel('Среднее время ожидания в очереди (модельное время)')
+    #     plt.xlabel('Загрузка системы')
+    #     plt.show()
 
     def create_generators_and_processors(self) -> (List[Generator], List[Processor]):
         generators = []
@@ -123,7 +177,7 @@ class mywindow(QMainWindow):
             generators, processors = self.create_generators_and_processors()
             model = Modeller(generators, processors)
 
-            result = model.time_based_modelling(how_to_check, end_param)
+            result = model.delta_t_modelling(how_to_check, end_param)
 
             generator_intensity = self.input_intens_generator.value()
             processor_intensity = self.input_intens_processor.value()

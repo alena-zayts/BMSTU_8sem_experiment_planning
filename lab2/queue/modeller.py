@@ -70,9 +70,7 @@ class Modeller:
         times_in_smo = [times_ended_processing[i] - times_generated[i] for i in range(len(times_ended_processing))]
         mean_time_in_smo = sum(times_in_smo) / len(times_in_smo)
 
-        # 3
         p_fact2 = sum(processor.time_periods) / current_modeling_time
-
 
         result = {
             'processed_requests': len(times_ended_processing),
