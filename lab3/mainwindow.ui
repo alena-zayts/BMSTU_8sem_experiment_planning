@@ -578,19 +578,6 @@
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton_model">
-    <property name="geometry">
-     <rect>
-      <x>1040</x>
-      <y>70</y>
-      <width>71</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Рассчитать</string>
-    </property>
-   </widget>
    <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
@@ -773,12 +760,12 @@
      </property>
      <item>
       <property name="text">
-       <string>В нормированном виде</string>
+       <string>Нормированные значения</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>В натуральном виде</string>
+       <string>Натуральные значения</string>
       </property>
      </item>
     </widget>
@@ -1027,7 +1014,7 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>20</y>
+       <y>0</y>
        <width>1100</width>
        <height>31</height>
       </rect>
@@ -1042,9 +1029,9 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>60</y>
+       <y>40</y>
        <width>1100</width>
-       <height>61</height>
+       <height>81</height>
       </rect>
      </property>
      <property name="font">
@@ -1065,12 +1052,12 @@
     </property>
     <item>
      <property name="text">
-      <string>В нормированном виде</string>
+      <string>Нормированные значения</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>В натуральном виде</string>
+      <string>Натуральные значения</string>
      </property>
     </item>
    </widget>
@@ -1085,14 +1072,40 @@
     </property>
     <item>
      <property name="text">
-      <string>В нормированном виде</string>
+      <string>Нормированные значения</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>В натуральном виде</string>
+      <string>Натуральные значения</string>
      </property>
     </item>
+   </widget>
+   <widget class="QPushButton" name="pushButtonPFE">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ПФЭ</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonDFE4">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>100</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ДФЭ</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

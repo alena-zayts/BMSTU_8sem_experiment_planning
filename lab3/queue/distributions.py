@@ -11,7 +11,6 @@ class ExponentialDistribution(AbstractDistribution):
         self._lambda = lambda_
 
     def generate_time(self):
-        # scale = 1 / lambda
         return np.random.exponential(1 / self._lambda)
 
 

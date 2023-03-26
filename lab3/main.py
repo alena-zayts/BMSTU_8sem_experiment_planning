@@ -13,7 +13,7 @@ from lab3.queue.modeller import Modeller
 from lab3.queue.processor import Processor
 from PyQt5 import QtCore
 
-ROUND_TO = 5
+ROUND_TO = 4
 
 # интервал варьирования загрузки системы: 0.05-0.5 ->
 # мин инт генератора / макс инт ОА = 0.01
@@ -33,7 +33,8 @@ class mywindow(QMainWindow):
         uic.loadUi('mainwindow.ui', self)
         self.show()
 
-        self.pushButton_model.clicked.connect(self.run_PFE_experiment)
+        self.pushButtonPFE.clicked.connect(self.run_PFE_experiment)
+        self.pushButtonDFE4.clicked.connect(self.run_DFE4_experiment)
         self.check_button.clicked.connect(self.check_button_clicked)
         self.check_button.setDisabled(True)
         self.comboBoxMatrix: QComboBox
@@ -150,6 +151,9 @@ class mywindow(QMainWindow):
             self.check_button.setDisabled(False)
         except Exception as e:
             self.handle_error(repr(e))
+
+    def run_DFE4_experiment(self):
+        pass
 
     def run_PFE_experiment(self):
         try:
