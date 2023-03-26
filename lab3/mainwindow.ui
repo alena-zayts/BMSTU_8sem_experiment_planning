@@ -1014,7 +1014,7 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>0</y>
+       <y>20</y>
        <width>1100</width>
        <height>31</height>
       </rect>
@@ -1029,9 +1029,9 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>40</y>
+       <y>60</y>
        <width>1100</width>
-       <height>81</height>
+       <height>61</height>
       </rect>
      </property>
      <property name="font">
