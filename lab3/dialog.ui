@@ -6,17 +6,23 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>300</height>
+    <width>1350</width>
+    <height>230</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
   <widget class="QComboBox" name="comboBoxMatrix">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>1100</x>
      <y>10</y>
      <width>181</width>
      <height>22</height>
@@ -36,10 +42,10 @@
   <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>50</y>
+     <x>0</x>
+     <y>0</y>
      <width>1100</width>
-     <height>261</height>
+     <height>220</height>
     </rect>
    </property>
    <property name="columnCount">

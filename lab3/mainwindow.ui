@@ -643,7 +643,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>570</y>
+      <y>610</y>
       <width>1251</width>
       <height>111</height>
      </rect>
@@ -963,9 +963,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>230</y>
+      <y>180</y>
       <width>1251</width>
-      <height>321</height>
+      <height>421</height>
      </rect>
     </property>
     <property name="title">
@@ -1031,7 +1031,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
+       <y>320</y>
        <width>81</width>
        <height>21</height>
       </rect>
@@ -1044,7 +1044,7 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>240</y>
+       <y>360</y>
        <width>1100</width>
        <height>61</height>
       </rect>
@@ -1059,7 +1059,7 @@
      <property name="geometry">
       <rect>
        <x>140</x>
-       <y>200</y>
+       <y>320</y>
        <width>1100</width>
        <height>31</height>
       </rect>
@@ -1074,7 +1074,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>240</y>
+       <y>360</y>
        <width>121</width>
        <height>21</height>
       </rect>
@@ -1120,22 +1120,91 @@
      <property name="geometry">
       <rect>
        <x>10</x>
+       <y>300</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>ДФЭ (1/4)</string>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="nonlinearDFE2">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>240</y>
+       <width>1100</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="linearDFE2">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>200</y>
+       <width>1100</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_41">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>240</y>
+       <width>121</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Частично нелинейная</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_42">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>200</y>
+       <width>81</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Линейная</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_43">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
        <y>180</y>
        <width>61</width>
        <height>16</height>
       </rect>
      </property>
      <property name="text">
-      <string>ДФЭ</string>
+      <string>ДФЭ (1/2)</string>
      </property>
     </widget>
    </widget>
    <widget class="QPushButton" name="pushButtonPFE">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>160</y>
-      <width>181</width>
+      <x>240</x>
+      <y>100</y>
+      <width>201</width>
       <height>31</height>
      </rect>
     </property>
@@ -1146,27 +1215,40 @@
    <widget class="QPushButton" name="pushButtonDFE4">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>200</y>
-      <width>181</width>
+      <x>240</x>
+      <y>140</y>
+      <width>201</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Матрица планирования ДФЭ</string>
+     <string>Матрица планирования ДФЭ (1/4)</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButtonRunAll">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>160</y>
-      <width>181</width>
+      <y>100</y>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Провести эксперименты</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonDFE2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>191</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Матрица планирования ДФЭ (1/2)</string>
     </property>
    </widget>
   </widget>
