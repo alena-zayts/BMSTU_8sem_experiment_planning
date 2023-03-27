@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QComboBox, QDialog
 
 from lab3.horse import Horse, FACTORS_NUMBER
 
@@ -18,9 +18,17 @@ ROUND_TO = 4
 QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
-
 EXP_TYPE_PFE = 1
 EXP_TYPE_DFE4 = 2
+
+FLAG_STRANGE_MATRIX = False
+
+
+class TableDialog(QDialog):
+    def __init__(self):
+        super(TableDialog, self).__init__()
+        uic.loadUi('dialog.ui', self)
+
 
 class mywindow(QMainWindow):
     def __init__(self):
@@ -29,31 +37,29 @@ class mywindow(QMainWindow):
         self.show()
 
         self.cur_experiment_type = None
-        self.pushButtonPFE.clicked.connect(self.run_PFE)
-        self.pushButtonDFE4.clicked.connect(self.run_DFE4)
+
+        self.pushButtonRunAll.clicked.connect(self.run_experiments)
+        self.pushButtonPFE.clicked.connect(self.show_PFE_results)
+        self.pushButtonDFE4.clicked.connect(self.show_DFE4_results)
         self.check_button.clicked.connect(self.check_button_clicked)
         self.check_button.setDisabled(True)
-        self.comboBoxMatrix: QComboBox
-        self.comboBoxMatrix.currentIndexChanged.connect(self.changed_type_of_factors)
-        self.comboBoxRegression.currentIndexChanged.connect(self.changed_type_of_factors)
+        self.pushButtonPFE.setDisabled(True)
+        self.pushButtonDFE4.setDisabled(True)
 
-        cur_min_maxes = self.get_current_min_maxes()
-        self.horse = Horse(*cur_min_maxes)
+        self.tableDialogPFE = TableDialog()
+        self.tableDialogDFE4 = TableDialog()
 
-    def run_PFE(self):
-        self.cur_experiment_type = EXP_TYPE_PFE
-        self.run_experiment()
+        self.tableDialogPFE.setWindowTitle('Матрица планирования ПФЭ')
+        self.tableDialogDFE4.setWindowTitle('Матрица планирования ДФЭ')
 
-    def run_DFE4(self):
-        self.cur_experiment_type = EXP_TYPE_DFE4
-        self.run_experiment()
+        self.tableDialogPFE.comboBoxMatrix.currentIndexChanged.connect(self.show_PFE_results)
+        self.tableDialogDFE4.comboBoxMatrix.currentIndexChanged.connect(self.show_DFE4_results)
 
-    def changed_type_of_factors(self):
-        if self.cur_experiment_type == EXP_TYPE_DFE4:
-            self.show_DFE4_results(0)
+        self.comboBoxRegression.currentIndexChanged.connect(self.show_PFE_results)
+        self.comboBoxRegression.currentIndexChanged.connect(self.show_DFE4_results)
 
-        elif self.cur_experiment_type == EXP_TYPE_PFE:
-            self.show_PFE_results(0)
+        initial_min_maxes = self.get_current_min_maxes()
+        self.horse = Horse(*initial_min_maxes)
 
     def get_current_min_maxes(self):
         gen_int_min = self.gen_int_min.value()
@@ -74,7 +80,6 @@ class mywindow(QMainWindow):
                 gen_int_min2, gen_int_max2, proc_int_min2, proc_int_max2, proc_var_min2, proc_var_max2]
 
     def check_button_clicked(self):
-        # TODO
         try:
             generator_intensity = self.input_intens_generator.value()
             processor_intensity = self.input_intens_processor.value()
@@ -84,38 +89,39 @@ class mywindow(QMainWindow):
             processor_variance2 = self.input_disp_processor_2.value()
 
             is_natural = self.comboBoxCheck.currentIndex() == 1
-            # TODO
-            self.horse.check_PFE(generator_intensity, processor_intensity, processor_variance,
-                                 generator_intensity2, processor_intensity2, processor_variance2, is_natural)
+
+            self.horse.check(generator_intensity, processor_intensity, processor_variance,
+                             generator_intensity2, processor_intensity2, processor_variance2, is_natural)
             self.show_PFE_results(0)
+            self.show_DFE4_results(0)
 
         except Exception as e:
             self.handle_error(repr(e))
 
     def show_PFE_results(self, i):
         try:
-            if self.comboBoxMatrix.currentIndex() == 0:
-                full_results_table = self.horse.norm_full_results_table
+            if self.tableDialogPFE.comboBoxMatrix.currentIndex() == 0:
+                full_results_table = self.horse.norm_full_results_table_PFE
             else:
-                full_results_table = self.horse.nat_full_results_table
+                full_results_table = self.horse.nat_full_results_table_PFE
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
-            self.tableWidget.clear()
-            self.tableWidget.setColumnCount(len(self.horse.PFE_column_names))
-            self.tableWidget.setHorizontalHeaderLabels(self.horse.PFE_column_names)
+            self.tableDialogPFE.tableWidget.clear()
+            self.tableDialogPFE.tableWidget.setColumnCount(len(self.horse.PFE_column_names))
+            self.tableDialogPFE.tableWidget.setHorizontalHeaderLabels(self.horse.PFE_column_names)
 
-            self.tableWidget.setRowCount(0)
+            self.tableDialogPFE.tableWidget.setRowCount(0)
             for i, row in enumerate(full_results_table):
-                self.tableWidget.insertRow(self.tableWidget.rowCount())
+                self.tableDialogPFE.tableWidget.insertRow(self.tableDialogPFE.tableWidget.rowCount())
                 for j, column in enumerate(row):
-                    self.tableWidget.setItem(self.tableWidget.rowCount() - 1, j,
-                                             QTableWidgetItem(str(full_results_table[i, j])))
+                    self.tableDialogPFE.tableWidget.setItem(self.tableDialogPFE.tableWidget.rowCount() - 1, j,
+                                                            QTableWidgetItem(str(full_results_table[i, j])))
 
             if self.comboBoxRegression.currentIndex() == 0:
-                coefficients = self.horse.norm_coefficients
+                coefficients = self.horse.norm_coefficients_PFE
             else:
-                coefficients = self.horse.nat_coefficients
+                coefficients = self.horse.nat_coefficients_PFE
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -149,7 +155,7 @@ class mywindow(QMainWindow):
                         for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
                             for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
                                 text_ends.append(f'*x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}'
-                                                   f'x{factor_index5}')
+                                                 f'x{factor_index5}')
                                 cur_factors_mult_index += 1
 
             text_ends.append('*x1x2x3x4x5x6')
@@ -157,36 +163,36 @@ class mywindow(QMainWindow):
             linear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(FACTORS_NUMBER + 1)])
             nonlinear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(2 ** FACTORS_NUMBER)])
 
-            self.linear.setText(linear_text)
-            self.nonlinear.setText(nonlinear_text)
-            self.check_button.setDisabled(False)
+            self.linearPFE.setText(linear_text)
+            self.nonlinearPFE.setText(nonlinear_text)
+
+            self.tableDialogPFE.show()
         except Exception as e:
             self.handle_error(repr(e))
 
     def show_DFE4_results(self, i):
         try:
-            if self.comboBoxMatrix.currentIndex() == 0:
-                full_results_table = self.horse.norm_full_results_table_d4
+            if self.tableDialogDFE4.comboBoxMatrix.currentIndex() == 0:
+                full_results_table = self.horse.norm_full_results_table_DFE4
             else:
-                full_results_table = self.horse.nat_full_results_table_d4
+                full_results_table = self.horse.nat_full_results_table_DFE4
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
-            self.tableWidget.clear()
-            self.tableWidget.setColumnCount(len(self.horse.DFE4_column_names))
-            self.tableWidget.setHorizontalHeaderLabels(self.horse.DFE4_column_names)
+            self.tableDialogDFE4.tableWidget.setColumnCount(len(self.horse.DFE4_column_names))
+            self.tableDialogDFE4.tableWidget.setHorizontalHeaderLabels(self.horse.DFE4_column_names)
+            self.tableDialogDFE4.tableWidget.setRowCount(0)
 
-            self.tableWidget.setRowCount(0)
             for i, row in enumerate(full_results_table):
-                self.tableWidget.insertRow(self.tableWidget.rowCount())
+                self.tableDialogDFE4.tableWidget.insertRow(self.tableDialogDFE4.tableWidget.rowCount())
                 for j, column in enumerate(row):
-                    self.tableWidget.setItem(self.tableWidget.rowCount() - 1, j,
-                                             QTableWidgetItem(str(full_results_table[i, j])))
+                    self.tableDialogDFE4.tableWidget.setItem(self.tableDialogDFE4.tableWidget.rowCount() - 1, j,
+                                                             QTableWidgetItem(str(full_results_table[i, j])))
 
             if self.comboBoxRegression.currentIndex() == 0:
-                coefficients = self.horse.norm_coefficients_d4
+                coefficients = self.horse.norm_coefficients_DFE4
             else:
-                coefficients = self.horse.nat_coefficients_d4
+                coefficients = self.horse.nat_coefficients_DFE4
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -198,29 +204,36 @@ class mywindow(QMainWindow):
                     text_ends.append(f'*x{factor_index1}x{factor_index2}')
                     cur_factors_mult_index += 1
 
-            linear_text = ' '.join([f'{coefficients[self.horse.DFE4_map_coefficients[i]]:+}{text_ends[i]}' for i in range(FACTORS_NUMBER + 1)])
-            nonlinear_text = ' '.join([f'{coefficients[self.horse.DFE4_map_coefficients[i]]:+}{text_ends[i]}' for i in range(len(text_ends))])
+            linear_text = ' '.join([f'{coefficients[self.horse.DFE4_map_coefficients[i]]:+}{text_ends[i]}' for i in
+                                    range(FACTORS_NUMBER + 1)])
+            nonlinear_text = ' '.join(
+                [f'{coefficients[self.horse.DFE4_map_coefficients[i]]:+}{text_ends[i]}' for i in range(len(text_ends))])
 
-            self.linear.setText(linear_text)
-            self.nonlinear.setText(nonlinear_text)
-            self.check_button.setDisabled(False)
+            self.linearDFE4.setText(linear_text)
+            self.nonlinearDFE4.setText(nonlinear_text)
+            self.tableDialogDFE4.show()
         except Exception as e:
             self.handle_error(repr(e))
 
-    def run_experiment(self):
+    def run_experiments(self):
         try:
             cur_min_maxes = self.get_current_min_maxes()
             end_param = self.input_t.value()
+
+            if not FLAG_STRANGE_MATRIX:
+                self.horse = Horse(*cur_min_maxes)
+
             self.horse.set_cur_min_maxes(*cur_min_maxes, end_param)
 
-            if self.cur_experiment_type == EXP_TYPE_PFE:
-                self.horse.run_PFE()
-                self.show_PFE_results(0)
-            elif self.cur_experiment_type == EXP_TYPE_DFE4:
-                self.horse.run_DFE4()
-                self.show_DFE4_results(0)
-            else:
-                raise ValueError
+            self.horse.run_PFE()
+            self.show_PFE_results(0)
+
+            self.horse.run_DFE4()
+            self.show_DFE4_results(0)
+
+            self.check_button.setDisabled(False)
+            self.pushButtonPFE.setDisabled(False)
+            self.pushButtonDFE4.setDisabled(False)
         except Exception as e:
             self.handle_error(repr(e))
 

@@ -14,7 +14,7 @@ M_SIZE_D4 = 2 ** FACTORS_NUMBER_D4
 LIN_COEFS_AMOUNT_D4 = FACTORS_NUMBER_D4 + 1
 NONLIN_COEFS_AMOUNT_D4 = M_SIZE_D4
 
-N_REPEATS = 5
+N_REPEATS = 1
 
 EPS = 1e-10
 
@@ -298,11 +298,11 @@ class Horse:
                                  np.abs(experiment_results - nat_linear_approximations),
                                  np.abs(experiment_results - nat_nonlinear_approximations)]
 
-        self.norm_full_results_table = norm_full_results
-        self.norm_coefficients = norm_coefficients
+        self.norm_full_results_table_PFE = norm_full_results
+        self.norm_coefficients_PFE = norm_coefficients
 
-        self.nat_full_results_table = nat_full_results
-        self.nat_coefficients = nat_coefficients
+        self.nat_full_results_table_PFE = nat_full_results
+        self.nat_coefficients_PFE = nat_coefficients
 
         self.PFE_column_names += ['y', 'y_l', 'y_nl', '|y-yl|', '|y-ynl|']
 
@@ -341,11 +341,11 @@ class Horse:
                                  np.abs(experiment_results - nat_linear_approximations),
                                  np.abs(experiment_results - nat_nonlinear_approximations)]
 
-        self.norm_full_results_table_d4 = norm_full_results
-        self.norm_coefficients_d4 = norm_coefficients
+        self.norm_full_results_table_DFE4 = norm_full_results
+        self.norm_coefficients_DFE4 = norm_coefficients
 
-        self.nat_full_results_table_d4 = nat_full_results
-        self.nat_coefficients_d4 = nat_coefficients
+        self.nat_full_results_table_DFE4 = nat_full_results
+        self.nat_coefficients_DFE4 = nat_coefficients
 
         self.DFE4_column_names += ['y', 'y_l', 'y_nl', '|y-yl|', '|y-ynl|']
 
@@ -387,8 +387,10 @@ class Horse:
             proc_int = self.nat_factor_from_norm(exp_params[2], self.global_proc_int_min, self.global_proc_int_max)
             proc_var = self.nat_factor_from_norm(exp_params[3], self.global_proc_var_min, self.global_proc_var_max)
             gen_int2 = self.nat_factor_from_norm(exp_params[4], self.global_gen_int_min, self.global_gen_int_max)
-            proc_int2 = self.nat_factor_from_norm(exp_params[self.DFE4_map_coefficients[5]], self.global_proc_int_min, self.global_proc_int_max)
-            proc_var2 = self.nat_factor_from_norm(exp_params[self.DFE4_map_coefficients[6]], self.global_proc_var_min, self.global_proc_var_max)
+            proc_int2 = self.nat_factor_from_norm(exp_params[self.DFE4_map_coefficients[5]], self.global_proc_int_min,
+                                                  self.global_proc_int_max)
+            proc_var2 = self.nat_factor_from_norm(exp_params[self.DFE4_map_coefficients[6]], self.global_proc_var_min,
+                                                  self.global_proc_var_max)
 
             lambda_, mu, sigma = self.convert_params(gen_int, proc_int, proc_var)
             lambda_2, mu2, sigma2 = self.convert_params(gen_int2, proc_int2, proc_var2)
@@ -405,11 +407,12 @@ class Horse:
 
             experiment_results[exp_number] = sum(cur_experiment_results) / N_REPEATS
 
+        # TODO
+        # full_results_table[:, list(range(len(self.horse.DFE4_map_coefficients)))] = \
+        #     self.horse.DFE4_norm_matrix[:, self.horse.DFE4_map_coefficients]
         self.process_results_DFE4(experiment_results)
 
-
-
-    def check_PFE(self,
+    def check(self,
                   gen_int_normalized, proc_int_normalized, proc_var_normalized,
                   gen_int_normalized2, proc_int_normalized2, proc_var_normalized2, is_natural):
 
@@ -462,107 +465,185 @@ class Horse:
 
         experiment_result = sum(cur_experiment_results) / N_REPEATS
 
-        experiment_plan_row_norm = np.array(
+        # experiment_plan_row_norm_PFE = np.array(
+        #     [1] +
+        #     [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2, proc_int_normalized2,
+        #      proc_var_normalized2, ] +
+        #     [1] * (M_SIZE - FACTORS_NUMBER - 1)
+        #
+        # )
+        # experiment_plan_row_nat_PFE = np.array(
+        #     [1] +
+        #     [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat, proc_int2_nat,
+        #      proc_var2_nat, ] +
+        #     [1] * (M_SIZE - FACTORS_NUMBER - 1)
+        # )
+        #
+        # # 2
+        # cur_factors_mult_index = 7
+        # for factor_index1 in range(1, FACTORS_NUMBER):
+        #     for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
+        #         experiment_plan_row_norm_PFE[cur_factors_mult_index] = (experiment_plan_row_norm_PFE[factor_index1] *
+        #                                                                 experiment_plan_row_norm_PFE[factor_index2])
+        #         experiment_plan_row_nat_PFE[cur_factors_mult_index] = (experiment_plan_row_nat_PFE[factor_index1] *
+        #                                                                 experiment_plan_row_nat_PFE[factor_index2])
+        #         cur_factors_mult_index += 1
+        #
+        # # 3
+        # for factor_index1 in range(1, FACTORS_NUMBER - 1):
+        #     for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
+        #         for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
+        #             experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
+        #                         experiment_plan_row_norm_PFE[factor_index1] *
+        #                         experiment_plan_row_norm_PFE[factor_index2] *
+        #                         experiment_plan_row_norm_PFE[factor_index3])
+        #             experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
+        #                         experiment_plan_row_nat_PFE[factor_index1] *
+        #                         experiment_plan_row_nat_PFE[factor_index2] *
+        #                         experiment_plan_row_nat_PFE[factor_index3])
+        #             cur_factors_mult_index += 1
+        #
+        # # 4
+        # for factor_index1 in range(1, FACTORS_NUMBER - 2):
+        #     for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 1):
+        #         for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER):
+        #             for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER + 1):
+        #                 experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
+        #                             experiment_plan_row_norm_PFE[factor_index1] *
+        #                             experiment_plan_row_norm_PFE[factor_index2] *
+        #                             experiment_plan_row_norm_PFE[factor_index3] *
+        #                             experiment_plan_row_norm_PFE[factor_index4])
+        #                 experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
+        #                             experiment_plan_row_nat_PFE[factor_index1] *
+        #                             experiment_plan_row_nat_PFE[factor_index2] *
+        #                             experiment_plan_row_nat_PFE[factor_index3] *
+        #                             experiment_plan_row_nat_PFE[factor_index4])
+        #                 cur_factors_mult_index += 1
+        #
+        # # 5
+        # for factor_index1 in range(1, FACTORS_NUMBER - 3):
+        #     for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 2):
+        #         for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER - 1):
+        #             for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
+        #                 for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
+        #                     experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
+        #                             experiment_plan_row_norm_PFE[factor_index1] *
+        #                             experiment_plan_row_norm_PFE[factor_index2] *
+        #                             experiment_plan_row_norm_PFE[factor_index3] *
+        #                             experiment_plan_row_norm_PFE[factor_index4] *
+        #                             experiment_plan_row_norm_PFE[factor_index5])
+        #                     experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
+        #                             experiment_plan_row_nat_PFE[factor_index1] *
+        #                             experiment_plan_row_nat_PFE[factor_index2] *
+        #                             experiment_plan_row_nat_PFE[factor_index3] *
+        #                             experiment_plan_row_nat_PFE[factor_index4] *
+        #                             experiment_plan_row_nat_PFE[factor_index5])
+        #                     cur_factors_mult_index += 1
+        #
+        # assert cur_factors_mult_index == M_SIZE - 1
+        # experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
+        #             experiment_plan_row_norm_PFE[1] * experiment_plan_row_norm_PFE[2] *
+        #             experiment_plan_row_norm_PFE[3] * experiment_plan_row_norm_PFE[4] *
+        #             experiment_plan_row_norm_PFE[5] * experiment_plan_row_norm_PFE[6])
+        # experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
+        #             experiment_plan_row_nat_PFE[1] * experiment_plan_row_nat_PFE[2] *
+        #             experiment_plan_row_nat_PFE[3] * experiment_plan_row_nat_PFE[4] *
+        #             experiment_plan_row_nat_PFE[5] * experiment_plan_row_nat_PFE[6])
+        # experiment_plan_row_norm_PFE = np.array(experiment_plan_row_norm_PFE)
+        # experiment_plan_row_nat_PFE = np.array(experiment_plan_row_nat_PFE)
+        #
+        # nonlinear_approximation_norm_PFE = sum(experiment_plan_row_norm_PFE * self.norm_coefficients)
+        # nonlinear_approximation_nat_PFE = sum(experiment_plan_row_nat_PFE * self.nat_coefficients)
+        #
+        # linear_approximation_norm_PFE = sum(
+        #     experiment_plan_row_norm_PFE[:LIN_COEFS_AMOUNT] * self.norm_coefficients[:LIN_COEFS_AMOUNT])
+        # linear_approximation_nat_PFE = sum(
+        #     experiment_plan_row_nat_PFE[:LIN_COEFS_AMOUNT] * self.nat_coefficients[:LIN_COEFS_AMOUNT])
+        #
+        # total_norm_PFE = list(experiment_plan_row_norm_PFE)
+        # total_nat_PFE = list(experiment_plan_row_nat_PFE)
+        #
+        # total_norm_PFE.extend([
+        #     experiment_result, linear_approximation_norm_PFE, nonlinear_approximation_norm_PFE,
+        #     np.abs(experiment_result - linear_approximation_norm_PFE),
+        #     np.abs(experiment_result - nonlinear_approximation_norm_PFE)])
+        #
+        # total_nat_PFE.extend([
+        #     experiment_result, linear_approximation_nat_PFE, nonlinear_approximation_nat_PFE ,
+        #     np.abs(experiment_result - linear_approximation_nat_PFE),
+        #     np.abs(experiment_result - nonlinear_approximation_nat_PFE )])
+        #
+        # self.norm_full_results_table_PFE = np.r_[self.norm_full_results_table_PFE, [total_norm_PFE]]
+        # self.nat_full_results_table_PFE = np.r_[self.nat_full_results_table_PFE, [total_nat_PFE]]
+        #
+        #
+
+        experiment_plan_row_norm_DFE4 = np.array(
             [1] +
-            [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2, proc_int_normalized2,
-             proc_var_normalized2, ] +
-            [1] * (M_SIZE - FACTORS_NUMBER - 1)
+            [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2] +
+            [1] * (M_SIZE_D4 - FACTORS_NUMBER_D4 - 1)
 
         )
-        experiment_plan_row_nat = np.array(
+        experiment_plan_row_nat_DFE4 = np.array(
             [1] +
-            [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat, proc_int2_nat,
-             proc_var2_nat, ] +
-            [1] * (M_SIZE - FACTORS_NUMBER - 1)
+            [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat] +
+            [1] * (M_SIZE_D4 - FACTORS_NUMBER_D4 - 1)
         )
 
         # 2
-        cur_factors_mult_index = 7
+        cur_factors_mult_index = 5
         for factor_index1 in range(1, FACTORS_NUMBER):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
-                experiment_plan_row_norm[cur_factors_mult_index] = (experiment_plan_row_norm[factor_index1] *
-                                                                    experiment_plan_row_norm[factor_index2])
-                experiment_plan_row_nat[cur_factors_mult_index] = (experiment_plan_row_nat[factor_index1] *
-                                                                   experiment_plan_row_nat[factor_index2])
+                experiment_plan_row_norm_DFE4[cur_factors_mult_index] = (experiment_plan_row_norm_DFE4[factor_index1] *
+                                                                         experiment_plan_row_norm_DFE4[factor_index2])
+                experiment_plan_row_nat_DFE4[cur_factors_mult_index] = (experiment_plan_row_nat_DFE4[factor_index1] *
+                                                                        experiment_plan_row_nat_DFE4[factor_index2])
                 cur_factors_mult_index += 1
 
         # 3
         for factor_index1 in range(1, FACTORS_NUMBER - 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
                 for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
-                    experiment_plan_row_norm[cur_factors_mult_index] = (experiment_plan_row_norm[factor_index1] *
-                                                                        experiment_plan_row_norm[factor_index2] *
-                                                                        experiment_plan_row_norm[factor_index3])
-                    experiment_plan_row_nat[cur_factors_mult_index] = (experiment_plan_row_nat[factor_index1] *
-                                                                       experiment_plan_row_nat[factor_index2] *
-                                                                       experiment_plan_row_nat[factor_index3])
+                    experiment_plan_row_norm_DFE4[cur_factors_mult_index] = (
+                            experiment_plan_row_norm_DFE4[factor_index1] *
+                            experiment_plan_row_norm_DFE4[factor_index2] *
+                            experiment_plan_row_norm_DFE4[factor_index3])
+                    experiment_plan_row_nat_DFE4[cur_factors_mult_index] = (
+                            experiment_plan_row_nat_DFE4[factor_index1] *
+                            experiment_plan_row_nat_DFE4[factor_index2] *
+                            experiment_plan_row_nat_DFE4[factor_index3])
                     cur_factors_mult_index += 1
 
-        # 4
-        for factor_index1 in range(1, FACTORS_NUMBER - 2):
-            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 1):
-                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER):
-                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER + 1):
-                        experiment_plan_row_norm[cur_factors_mult_index] = (experiment_plan_row_norm[factor_index1] *
-                                                                            experiment_plan_row_norm[factor_index2] *
-                                                                            experiment_plan_row_norm[factor_index3] *
-                                                                            experiment_plan_row_norm[factor_index4])
-                        experiment_plan_row_nat[cur_factors_mult_index] = (experiment_plan_row_nat[factor_index1] *
-                                                                           experiment_plan_row_nat[factor_index2] *
-                                                                           experiment_plan_row_nat[factor_index3] *
-                                                                           experiment_plan_row_nat[factor_index4])
-                        cur_factors_mult_index += 1
+        experiment_plan_row_norm_DFE4[cur_factors_mult_index] = (
+                experiment_plan_row_norm_DFE4[1] * experiment_plan_row_norm_DFE4[2] *
+                experiment_plan_row_norm_DFE4[3] * experiment_plan_row_norm_DFE4[4])
+        experiment_plan_row_nat_DFE4[cur_factors_mult_index] = (
+                experiment_plan_row_nat_DFE4[1] * experiment_plan_row_nat_DFE4[2] *
+                experiment_plan_row_nat_DFE4[3] * experiment_plan_row_nat_DFE4[4])
 
-        # 5
-        for factor_index1 in range(1, FACTORS_NUMBER - 3):
-            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 2):
-                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER - 1):
-                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
-                        for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
-                            experiment_plan_row_norm[cur_factors_mult_index] = (
-                                    experiment_plan_row_norm[factor_index1] *
-                                    experiment_plan_row_norm[factor_index2] *
-                                    experiment_plan_row_norm[factor_index3] *
-                                    experiment_plan_row_norm[factor_index4] *
-                                    experiment_plan_row_norm[factor_index5])
-                            experiment_plan_row_nat[cur_factors_mult_index] = (
-                                    experiment_plan_row_nat[factor_index1] *
-                                    experiment_plan_row_nat[factor_index2] *
-                                    experiment_plan_row_nat[factor_index3] *
-                                    experiment_plan_row_nat[factor_index4] *
-                                    experiment_plan_row_nat[factor_index5])
-                            cur_factors_mult_index += 1
+        experiment_plan_row_norm_DFE4 = np.array(experiment_plan_row_norm_DFE4)
+        experiment_plan_row_nat_DFE4 = np.array(experiment_plan_row_nat_DFE4)
 
-        assert cur_factors_mult_index == M_SIZE - 1
-        experiment_plan_row_norm[cur_factors_mult_index] = (experiment_plan_row_norm[1] * experiment_plan_row_norm[2] *
-                                                            experiment_plan_row_norm[3] * experiment_plan_row_norm[4] *
-                                                            experiment_plan_row_norm[5] * experiment_plan_row_norm[6])
-        experiment_plan_row_nat[cur_factors_mult_index] = (experiment_plan_row_nat[1] * experiment_plan_row_nat[2] *
-                                                           experiment_plan_row_nat[3] * experiment_plan_row_nat[4] *
-                                                           experiment_plan_row_nat[5] * experiment_plan_row_nat[6])
-        experiment_plan_row_norm = np.array(experiment_plan_row_norm)
-        experiment_plan_row_nat = np.array(experiment_plan_row_nat)
+        nonlinear_approximation_norm_DFE4 = sum(experiment_plan_row_norm_DFE4 * self.norm_coefficients_DFE4)
+        nonlinear_approximation_nat_DFE4 = sum(experiment_plan_row_nat_DFE4 * self.nat_coefficients_DFE4)
 
-        nonlinear_approximation_norm = sum(experiment_plan_row_norm * self.norm_coefficients)
-        nonlinear_approximation_nat = sum(experiment_plan_row_nat * self.nat_coefficients)
+        linear_approximation_norm_DFE4 = sum(
+            experiment_plan_row_norm_DFE4[:LIN_COEFS_AMOUNT_D4] * self.norm_coefficients_PFE[:LIN_COEFS_AMOUNT_D4])
+        linear_approximation_nat_DFE4 = sum(
+            experiment_plan_row_nat_DFE4[:LIN_COEFS_AMOUNT_D4] * self.nat_coefficients_PFE[:LIN_COEFS_AMOUNT_D4])
 
-        linear_approximation_norm = sum(
-            experiment_plan_row_norm[:LIN_COEFS_AMOUNT] * self.norm_coefficients[:LIN_COEFS_AMOUNT])
-        linear_approximation_nat = sum(
-            experiment_plan_row_nat[:LIN_COEFS_AMOUNT] * self.nat_coefficients[:LIN_COEFS_AMOUNT])
+        total_norm_DFE4 = list(experiment_plan_row_norm_DFE4)
+        total_nat_DFE4 = list(experiment_plan_row_nat_DFE4)
 
-        total_norm = list(experiment_plan_row_norm)
-        total_nat = list(experiment_plan_row_nat)
+        total_norm_DFE4.extend([
+            experiment_result, linear_approximation_norm_DFE4, nonlinear_approximation_norm_DFE4,
+            np.abs(experiment_result - linear_approximation_norm_DFE4),
+            np.abs(experiment_result - nonlinear_approximation_norm_DFE4)])
 
-        total_norm.extend([
-            experiment_result, linear_approximation_norm, nonlinear_approximation_norm,
-            np.abs(experiment_result - linear_approximation_norm),
-            np.abs(experiment_result - nonlinear_approximation_norm)])
+        total_nat_DFE4.extend([
+            experiment_result, linear_approximation_nat_DFE4, nonlinear_approximation_nat_DFE4,
+            np.abs(experiment_result - linear_approximation_nat_DFE4),
+            np.abs(experiment_result - nonlinear_approximation_nat_DFE4)])
 
-        total_nat.extend([
-            experiment_result, linear_approximation_nat, nonlinear_approximation_nat,
-            np.abs(experiment_result - linear_approximation_nat),
-            np.abs(experiment_result - nonlinear_approximation_nat)])
-
-        self.norm_full_results_table = np.r_[self.norm_full_results_table, [total_norm]]
-        self.nat_full_results_table = np.r_[self.nat_full_results_table, [total_nat]]
+        self.norm_full_results_table_PFE = np.r_[self.norm_full_results_table_PFE, [total_norm_DFE4]]
+        self.nat_full_results_table_PFE = np.r_[self.nat_full_results_table_PFE, [total_nat_DFE4]]
