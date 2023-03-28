@@ -1,8 +1,13 @@
-from lab3.queue.processor import Processor
+import numpy as np
+from itertools import combinations
+from math import factorial
+from collections import defaultdict
+from copy import deepcopy
+
+from lab3.queue import distributions
 from lab3.queue.generator import Generator
 from lab3.queue.modeller import Modeller
-from lab3.queue import distributions
-import numpy as np
+from lab3.queue.processor import Processor
 
 FACTORS_NUMBER = 6
 M_SIZE = 2 ** FACTORS_NUMBER
@@ -19,7 +24,7 @@ M_SIZE_D2 = 2 ** FACTORS_NUMBER_D2
 LIN_COEFS_AMOUNT_D2 = FACTORS_NUMBER_D2 + 1
 NONLIN_COEFS_AMOUNT_D2 = M_SIZE_D2
 
-N_REPEATS = 1
+N_REPEATS = 3
 
 EPS = 1e-10
 
@@ -271,10 +276,12 @@ class Horse:
 
         # 22
         self.DFE4_natural_matrix_AAA = np.array([np.array(natural_matrix)[:,
-                                        self.DFE4_map_coefficients[i]] for i in range(len(self.DFE4_map_coefficients))]).transpose()
+                                                 self.DFE4_map_coefficients[i]] for i in
+                                                 range(len(self.DFE4_map_coefficients))]).transpose()
 
         self.DFE4_norm_matrix_AAA = np.array([np.array(norm_matrix)[:,
-                                     self.DFE4_map_coefficients[i]] for i in range(len(self.DFE4_map_coefficients))]).transpose()
+                                              self.DFE4_map_coefficients[i]] for i in
+                                              range(len(self.DFE4_map_coefficients))]).transpose()
 
         self.DFE4_column_names_AAA = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6',
                                       'x1x2', 'x1x3', 'x1x4', 'x1x5', 'x1x6', 'x2x3', 'x2x4', 'x2x5', 'x2x6',
@@ -377,10 +384,12 @@ class Horse:
 
         # 22
         self.DFE2_natural_matrix_AAA = np.array([np.array(natural_matrix)[:,
-                                        self.DFE2_map_coefficients[i]] for i in range(len(self.DFE2_map_coefficients))]).transpose()
+                                                 self.DFE2_map_coefficients[i]] for i in
+                                                 range(len(self.DFE2_map_coefficients))]).transpose()
 
         self.DFE2_norm_matrix_AAA = np.array([np.array(norm_matrix)[:,
-                                     self.DFE2_map_coefficients[i]] for i in range(len(self.DFE2_map_coefficients))]).transpose()
+                                              self.DFE2_map_coefficients[i]] for i in
+                                              range(len(self.DFE2_map_coefficients))]).transpose()
 
         self.DFE2_column_names_AAA = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6',
                                       'x1x2', 'x1x3', 'x1x4', 'x1x5', 'x1x6', 'x2x3', 'x2x4', 'x2x5', 'x2x6',
@@ -395,6 +404,7 @@ class Horse:
         x = self.PFE_natural_matrix
         nat_coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
                                   experiment_results)
+        real_nat_coefficients = self.norm_to_natural_coefficients(norm_coefficients, FACTORS_NUMBER)
 
         norm_nonlinear_approximations = [
             sum(self.PFE_norm_matrix[i, :] * norm_coefficients[:])
@@ -406,8 +416,17 @@ class Horse:
         nat_nonlinear_approximations = [
             sum(self.PFE_natural_matrix[i, :] * nat_coefficients[:])
             for i in range(M_SIZE)]
+
+        real_nat_nonlinear_approximations = [
+            sum(self.PFE_natural_matrix[i, :len(real_nat_coefficients)] * real_nat_coefficients[:])
+            for i in range(M_SIZE)]
+
         nat_linear_approximations = [
             sum(self.PFE_natural_matrix[i, :LIN_COEFS_AMOUNT] * nat_coefficients[:LIN_COEFS_AMOUNT])
+            for i in range(M_SIZE)]
+
+        real_nat_linear_approximations = [
+            sum(self.PFE_natural_matrix[i, :LIN_COEFS_AMOUNT] * real_nat_coefficients[:LIN_COEFS_AMOUNT])
             for i in range(M_SIZE)]
 
         # concatenate
@@ -421,11 +440,19 @@ class Horse:
                                  np.abs(experiment_results - nat_linear_approximations),
                                  np.abs(experiment_results - nat_nonlinear_approximations)]
 
+        real_nat_full_results = np.c_[self.PFE_natural_matrix,
+                                      experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
+                                      np.abs(experiment_results - real_nat_linear_approximations),
+                                      np.abs(experiment_results - real_nat_nonlinear_approximations)]
+
         self.norm_full_results_table_PFE = norm_full_results
         self.norm_coefficients_PFE = norm_coefficients
 
         self.nat_full_results_table_PFE = nat_full_results
         self.nat_coefficients_PFE = nat_coefficients
+
+        self.real_nat_full_results_table_PFE = real_nat_full_results
+        self.real_nat_coefficients_PFE = real_nat_coefficients
 
         self.PFE_column_names += ['y', 'y_l', 'y_nl', '|y-yl|', '|y-ynl|']
 
@@ -438,6 +465,7 @@ class Horse:
         x = self.DFE4_natural_matrix
         nat_coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
                                   experiment_results)
+        real_nat_coefficients = self.norm_to_natural_coefficients(norm_coefficients, FACTORS_NUMBER_D4)
 
         norm_nonlinear_approximations = [
             sum(self.DFE4_norm_matrix[i, :] * norm_coefficients[:])
@@ -453,6 +481,13 @@ class Horse:
             sum(self.DFE4_natural_matrix[i, :LIN_COEFS_AMOUNT_D4] * nat_coefficients[:LIN_COEFS_AMOUNT_D4])
             for i in range(M_SIZE_D4)]
 
+        real_nat_nonlinear_approximations = [
+            sum(self.DFE4_natural_matrix[i, :len(real_nat_coefficients)] * real_nat_coefficients[:])
+            for i in range(M_SIZE_D4)]
+        real_nat_linear_approximations = [
+            sum(self.DFE4_natural_matrix[i, :LIN_COEFS_AMOUNT_D4] * real_nat_coefficients[:LIN_COEFS_AMOUNT_D4])
+            for i in range(M_SIZE_D4)]
+
         # concatenate
         norm_full_results = np.c_[self.DFE4_norm_matrix,
                                   experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
@@ -460,10 +495,9 @@ class Horse:
                                   np.abs(experiment_results - norm_nonlinear_approximations)]
 
         norm_full_results_AAA = np.c_[self.DFE4_norm_matrix_AAA,
-                                  experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
-                                  np.abs(experiment_results - norm_linear_approximations),
-                                  np.abs(experiment_results - norm_nonlinear_approximations)]
-
+                                      experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
+                                      np.abs(experiment_results - norm_linear_approximations),
+                                      np.abs(experiment_results - norm_nonlinear_approximations)]
 
         nat_full_results = np.c_[self.DFE4_natural_matrix,
                                  experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
@@ -471,15 +505,27 @@ class Horse:
                                  np.abs(experiment_results - nat_nonlinear_approximations)]
 
         nat_full_results_AAA = np.c_[self.DFE4_natural_matrix_AAA,
-                                 experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
-                                 np.abs(experiment_results - nat_linear_approximations),
-                                 np.abs(experiment_results - nat_nonlinear_approximations)]
+                                     experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
+                                     np.abs(experiment_results - nat_linear_approximations),
+                                     np.abs(experiment_results - nat_nonlinear_approximations)]
+
+        real_nat_full_results = np.c_[self.DFE4_natural_matrix,
+                                 experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
+                                 np.abs(experiment_results - real_nat_linear_approximations),
+                                 np.abs(experiment_results - real_nat_nonlinear_approximations)]
+
+        real_nat_full_results_AAA = np.c_[self.DFE4_natural_matrix_AAA,
+                                     experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
+                                     np.abs(experiment_results - real_nat_linear_approximations),
+                                     np.abs(experiment_results - real_nat_nonlinear_approximations)]
 
         self.norm_full_results_table_DFE4 = norm_full_results
         self.norm_coefficients_DFE4 = norm_coefficients
 
         self.nat_full_results_table_DFE4 = nat_full_results
         self.nat_coefficients_DFE4 = nat_coefficients
+        self.real_nat_full_results_table_DFE4 = real_nat_full_results
+        self.real_nat_coefficients_DFE4 = real_nat_coefficients
 
         self.norm_full_results_table_DFE4_AAA = norm_full_results_AAA
         self.norm_coefficients_DFE4_AAA = [norm_coefficients[
@@ -487,6 +533,10 @@ class Horse:
                                            range(len(self.DFE4_map_coefficients))]
         self.nat_full_results_table_DFE4_AAA = nat_full_results_AAA
         self.nat_coefficients_DFE4_AAA = [nat_coefficients[
+                                              self.DFE4_map_coefficients[i]] for i in
+                                          range(len(self.DFE4_map_coefficients))]
+        self.real_nat_full_results_table_DFE4_AAA = real_nat_full_results_AAA
+        self.real_nat_coefficients_DFE4_AAA = [real_nat_coefficients[
                                               self.DFE4_map_coefficients[i]] for i in
                                           range(len(self.DFE4_map_coefficients))]
 
@@ -502,6 +552,7 @@ class Horse:
         x = self.DFE2_natural_matrix
         nat_coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
                                   experiment_results)
+        real_nat_coefficients = self.norm_to_natural_coefficients(norm_coefficients, FACTORS_NUMBER_D2)
 
         norm_nonlinear_approximations = [
             sum(self.DFE2_norm_matrix[i, :] * norm_coefficients[:])
@@ -517,6 +568,13 @@ class Horse:
             sum(self.DFE2_natural_matrix[i, :LIN_COEFS_AMOUNT_D2] * nat_coefficients[:LIN_COEFS_AMOUNT_D2])
             for i in range(M_SIZE_D2)]
 
+        real_nat_nonlinear_approximations = [
+            sum(self.DFE2_natural_matrix[i, :len(real_nat_coefficients)] * real_nat_coefficients[:])
+            for i in range(M_SIZE_D2)]
+        real_nat_linear_approximations = [
+            sum(self.DFE2_natural_matrix[i, :LIN_COEFS_AMOUNT_D2] * real_nat_coefficients[:LIN_COEFS_AMOUNT_D2])
+            for i in range(M_SIZE_D2)]
+
         # concatenate
         norm_full_results = np.c_[self.DFE2_norm_matrix,
                                   experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
@@ -524,10 +582,9 @@ class Horse:
                                   np.abs(experiment_results - norm_nonlinear_approximations)]
 
         norm_full_results_AAA = np.c_[self.DFE2_norm_matrix_AAA,
-                                  experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
-                                  np.abs(experiment_results - norm_linear_approximations),
-                                  np.abs(experiment_results - norm_nonlinear_approximations)]
-
+                                      experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
+                                      np.abs(experiment_results - norm_linear_approximations),
+                                      np.abs(experiment_results - norm_nonlinear_approximations)]
 
         nat_full_results = np.c_[self.DFE2_natural_matrix,
                                  experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
@@ -535,15 +592,27 @@ class Horse:
                                  np.abs(experiment_results - nat_nonlinear_approximations)]
 
         nat_full_results_AAA = np.c_[self.DFE2_natural_matrix_AAA,
-                                 experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
-                                 np.abs(experiment_results - nat_linear_approximations),
-                                 np.abs(experiment_results - nat_nonlinear_approximations)]
+                                     experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
+                                     np.abs(experiment_results - nat_linear_approximations),
+                                     np.abs(experiment_results - nat_nonlinear_approximations)]
+
+        real_nat_full_results = np.c_[self.DFE2_natural_matrix,
+                                 experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
+                                 np.abs(experiment_results - real_nat_linear_approximations),
+                                 np.abs(experiment_results - real_nat_nonlinear_approximations)]
+
+        real_nat_full_results_AAA = np.c_[self.DFE2_natural_matrix_AAA,
+                                     experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
+                                     np.abs(experiment_results - real_nat_linear_approximations),
+                                     np.abs(experiment_results - real_nat_nonlinear_approximations)]
 
         self.norm_full_results_table_DFE2 = norm_full_results
         self.norm_coefficients_DFE2 = norm_coefficients
 
         self.nat_full_results_table_DFE2 = nat_full_results
         self.nat_coefficients_DFE2 = nat_coefficients
+        self.real_nat_full_results_table_DFE2 = real_nat_full_results
+        self.real_nat_coefficients_DFE2 = real_nat_coefficients
 
         self.norm_full_results_table_DFE2_AAA = norm_full_results_AAA
         self.norm_coefficients_DFE2_AAA = [norm_coefficients[
@@ -551,6 +620,10 @@ class Horse:
                                            range(len(self.DFE2_map_coefficients))]
         self.nat_full_results_table_DFE2_AAA = nat_full_results_AAA
         self.nat_coefficients_DFE2_AAA = [nat_coefficients[
+                                              self.DFE2_map_coefficients[i]] for i in
+                                          range(len(self.DFE2_map_coefficients))]
+        self.real_nat_full_results_table_DFE2_AAA = real_nat_full_results_AAA
+        self.real_nat_coefficients_DFE2_AAA = [real_nat_coefficients[
                                               self.DFE2_map_coefficients[i]] for i in
                                           range(len(self.DFE2_map_coefficients))]
 
@@ -616,7 +689,6 @@ class Horse:
             experiment_results[exp_number] = sum(cur_experiment_results) / N_REPEATS
 
         self.process_results_DFE4(experiment_results)
-
 
     def run_DFE2(self):
         # print(plan_matrix_normalized)
@@ -722,7 +794,7 @@ class Horse:
                 experiment_plan_row_norm_PFE[cur_factors_mult_index] = (experiment_plan_row_norm_PFE[factor_index1] *
                                                                         experiment_plan_row_norm_PFE[factor_index2])
                 experiment_plan_row_nat_PFE[cur_factors_mult_index] = (experiment_plan_row_nat_PFE[factor_index1] *
-                                                                        experiment_plan_row_nat_PFE[factor_index2])
+                                                                       experiment_plan_row_nat_PFE[factor_index2])
                 cur_factors_mult_index += 1
 
         # 3
@@ -730,13 +802,13 @@ class Horse:
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
                 for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
                     experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
-                                experiment_plan_row_norm_PFE[factor_index1] *
-                                experiment_plan_row_norm_PFE[factor_index2] *
-                                experiment_plan_row_norm_PFE[factor_index3])
+                            experiment_plan_row_norm_PFE[factor_index1] *
+                            experiment_plan_row_norm_PFE[factor_index2] *
+                            experiment_plan_row_norm_PFE[factor_index3])
                     experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
-                                experiment_plan_row_nat_PFE[factor_index1] *
-                                experiment_plan_row_nat_PFE[factor_index2] *
-                                experiment_plan_row_nat_PFE[factor_index3])
+                            experiment_plan_row_nat_PFE[factor_index1] *
+                            experiment_plan_row_nat_PFE[factor_index2] *
+                            experiment_plan_row_nat_PFE[factor_index3])
                     cur_factors_mult_index += 1
 
         # 4
@@ -745,15 +817,15 @@ class Horse:
                 for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER):
                     for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER + 1):
                         experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
-                                    experiment_plan_row_norm_PFE[factor_index1] *
-                                    experiment_plan_row_norm_PFE[factor_index2] *
-                                    experiment_plan_row_norm_PFE[factor_index3] *
-                                    experiment_plan_row_norm_PFE[factor_index4])
+                                experiment_plan_row_norm_PFE[factor_index1] *
+                                experiment_plan_row_norm_PFE[factor_index2] *
+                                experiment_plan_row_norm_PFE[factor_index3] *
+                                experiment_plan_row_norm_PFE[factor_index4])
                         experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
-                                    experiment_plan_row_nat_PFE[factor_index1] *
-                                    experiment_plan_row_nat_PFE[factor_index2] *
-                                    experiment_plan_row_nat_PFE[factor_index3] *
-                                    experiment_plan_row_nat_PFE[factor_index4])
+                                experiment_plan_row_nat_PFE[factor_index1] *
+                                experiment_plan_row_nat_PFE[factor_index2] *
+                                experiment_plan_row_nat_PFE[factor_index3] *
+                                experiment_plan_row_nat_PFE[factor_index4])
                         cur_factors_mult_index += 1
 
         # 5
@@ -778,13 +850,13 @@ class Horse:
 
         assert cur_factors_mult_index == M_SIZE - 1
         experiment_plan_row_norm_PFE[cur_factors_mult_index] = (
-                    experiment_plan_row_norm_PFE[1] * experiment_plan_row_norm_PFE[2] *
-                    experiment_plan_row_norm_PFE[3] * experiment_plan_row_norm_PFE[4] *
-                    experiment_plan_row_norm_PFE[5] * experiment_plan_row_norm_PFE[6])
+                experiment_plan_row_norm_PFE[1] * experiment_plan_row_norm_PFE[2] *
+                experiment_plan_row_norm_PFE[3] * experiment_plan_row_norm_PFE[4] *
+                experiment_plan_row_norm_PFE[5] * experiment_plan_row_norm_PFE[6])
         experiment_plan_row_nat_PFE[cur_factors_mult_index] = (
-                    experiment_plan_row_nat_PFE[1] * experiment_plan_row_nat_PFE[2] *
-                    experiment_plan_row_nat_PFE[3] * experiment_plan_row_nat_PFE[4] *
-                    experiment_plan_row_nat_PFE[5] * experiment_plan_row_nat_PFE[6])
+                experiment_plan_row_nat_PFE[1] * experiment_plan_row_nat_PFE[2] *
+                experiment_plan_row_nat_PFE[3] * experiment_plan_row_nat_PFE[4] *
+                experiment_plan_row_nat_PFE[5] * experiment_plan_row_nat_PFE[6])
         experiment_plan_row_norm_PFE = np.array(experiment_plan_row_norm_PFE)
         experiment_plan_row_nat_PFE = np.array(experiment_plan_row_nat_PFE)
 
@@ -805,20 +877,12 @@ class Horse:
             np.abs(experiment_result - nonlinear_approximation_norm_PFE)])
 
         total_nat_PFE.extend([
-            experiment_result, linear_approximation_nat_PFE, nonlinear_approximation_nat_PFE ,
+            experiment_result, linear_approximation_nat_PFE, nonlinear_approximation_nat_PFE,
             np.abs(experiment_result - linear_approximation_nat_PFE),
-            np.abs(experiment_result - nonlinear_approximation_nat_PFE )])
+            np.abs(experiment_result - nonlinear_approximation_nat_PFE)])
 
         self.norm_full_results_table_PFE = np.r_[self.norm_full_results_table_PFE, [total_norm_PFE]]
         self.nat_full_results_table_PFE = np.r_[self.nat_full_results_table_PFE, [total_nat_PFE]]
-
-
-
-
-
-
-
-
 
         experiment_plan_row_norm_DFE4 = np.array(
             [1] +
@@ -874,22 +938,6 @@ class Horse:
         self.norm_full_results_table_DFE4_AAA = np.r_[self.norm_full_results_table_DFE4_AAA, [total_norm_DFE4]]
         self.nat_full_results_table_DFE4_AAA = np.r_[self.nat_full_results_table_DFE4_AAA, [total_nat_DFE4]]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         experiment_plan_row_norm_DFE2 = np.array(
             [1] +
             [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2,
@@ -939,3 +987,122 @@ class Horse:
 
         self.norm_full_results_table_DFE2_AAA = np.r_[self.norm_full_results_table_DFE2_AAA, [total_norm_DFE2]]
         self.nat_full_results_table_DFE2_AAA = np.r_[self.nat_full_results_table_DFE2_AAA, [total_nat_DFE2]]
+
+    def norm_to_natural_coefficients(self, norm_coefficients, n_factors):
+        norm_coefficients = list(norm_coefficients)
+
+        x0s = [None, ] + [(self.min_maxes_nat[i][1] + self.min_maxes_nat[i][0]) / 2 for i in range(n_factors)]
+        intervals = [None, ] + [(self.min_maxes_nat[i][1] - self.min_maxes_nat[i][0]) / 2 for i in range(n_factors)]
+
+        b0_nat = norm_coefficients.pop(0)
+
+        all_indexes = set(range(1, n_factors + 1))
+        all_my_combinations = {by: list(combinations(all_indexes, by)) for by in range(1, 4)}  # комбинации по n индексов
+
+        # заполняем исходные (нормированные) коэффициенты
+        b = dict()
+        cur_index_in_coefficients = 0
+        for by, combinations_by in all_my_combinations.items():
+            for combination in combinations_by:
+                b[combination] = norm_coefficients[cur_index_in_coefficients]
+                cur_index_in_coefficients += 1
+
+        # ??
+        # b_nat = deepcopy(b)
+        b_nat = defaultdict(int)
+        b0_nat = 0
+
+        # 1
+        for i in range(1, n_factors + 1):
+            mult = b[(i,)] / intervals[i]
+            b0_nat -= mult * x0s[i]
+
+            b_nat[(i,)] += mult
+
+        for i in range(1, n_factors + 1):
+            for j in range(i + 1, n_factors + 1):
+                mult = b[(i, j)] / (intervals[i] * intervals[j])
+                b0_nat += mult * x0s[i] * x0s[j]
+
+                b_nat[(i,)] -= mult * x0s[j]
+                b_nat[(j,)] -= mult * x0s[i]
+
+                b_nat[(i, j)] += mult
+
+        for i in range(1, n_factors + 1):
+            for j in range(i + 1, n_factors + 1):
+                for k in range(j + 1, n_factors + 1):
+                    mult = b[(i, j, k)] / (intervals[i] * intervals[j] * intervals[k])
+                    b0_nat -= mult * x0s[i] * x0s[j] * x0s[k]
+
+                    b_nat[(i,)] += mult * x0s[j] * x0s[k]
+                    b_nat[(j,)] += mult * x0s[i] * x0s[k]
+                    b_nat[(k,)] += mult * x0s[i] * x0s[j]
+
+                    b_nat[(i, j)] -= mult * x0s[k]
+                    b_nat[(i, k)] -= mult * x0s[j]
+                    b_nat[(j, k)] -= mult * x0s[i]
+
+                    # ??
+                    # b_nat[(i, j, k)] = mult
+
+        all_my_combinations.pop(3)
+        b_nat_list = [b0_nat]
+        for by, combinations_by in all_my_combinations.items():
+            for combination in combinations_by:
+                b_nat_list.append(b_nat[combination])
+
+        needed_len = 0
+        for i in range(n_factors + 1):
+            needed_len += int(factorial(n_factors) / (factorial(i) * factorial(n_factors - i)))
+
+        # needed_len = int((n_factors + 1) + (factorial(n_factors) / (factorial(n_factors - 2) * 2)))
+        b_nat_list += [0] * (needed_len - len(b_nat_list))
+        print(n_factors, needed_len)
+        return b_nat_list
+
+# def do_shit(n_factors, coefficients, intervals, x0s):
+#     # забиваем пока на b0 вообще
+#     b0_norm = coefficients.pop(0)
+#
+#     all_indexes = set(range(1, n_factors + 1))
+#     by_range = list(range(1, n_factors + 1))  # комбинации по сколько индексов
+#     all_my_combinations = {by: combinations(all_indexes, by) for by in by_range}  # комбинации по n индексов
+#
+#     # заполняем исходные (нормированные) коэффициенты
+#     b_norm = dict()
+#     cur_index_in_coefficients = 0
+#     for by, combinations_by in all_my_combinations.items():
+#         for combination_by in combinations_by:
+#             b_norm[combination_by] = coefficients[cur_index_in_coefficients]
+#             cur_index_in_coefficients += 1
+#
+#     # а теперь влияем на натуральные
+#     b_nat = deepcopy(b_norm)
+#
+#     # по одному начинаются с +, по 2 - с минуса
+#     start_sign = -1
+#     for by_effecting in range(1, n_factors + 1):  # комбинации по effecting_by
+#         start_sign *= -1
+#         for combination_effecting in all_my_combinations[by_effecting]:
+#             sign = -start_sign
+#
+#             mult = b_norm[combination_effecting]
+#             for interval_index in combination_effecting:
+#                 mult /= intervals[interval_index]
+#
+#             for by_being_changed in range(by_effecting, n_factors + 1):  # влияют на комбинации из такого же числа и выше
+#                 sign *= -1
+#
+#
+#
+#
+#
+#     for by_to_change in by_range:  # сейчас будем влиять на натуральные коэффициенты по by_to_change индексов (вз/д)
+#         for combination_to_change in all_my_combinations[by_to_change]: # вот на эти комбинации
+#             sign = -1
+#             for by_affecting in range(n_factors, by_to_change - 1, -1): # сейчас будем влиять с помощью комбинаций по by_affecting индексов
+#
+#                 for
+#
+#         for combination_by in combinations_by:

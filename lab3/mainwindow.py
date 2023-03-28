@@ -1,10 +1,10 @@
 import numpy as np
 from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QComboBox, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QDialog
 
 from lab3.horse import Horse, FACTORS_NUMBER
 
-ROUND_TO = 4
+ROUND_TO = 3
 
 # интервал варьирования загрузки системы: 0.05-0.5 ->
 # мин инт генератора / макс инт ОА = 0.01
@@ -20,7 +20,8 @@ QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 FLAG_STRANGE_MATRIX = False
 FLAG_SHOW_AAA = True
-FLAG_HIDE_4 = True
+FLAG_HIDE_4 = False
+FLAG_REAL = False
 
 
 class TableDialog(QDialog):
@@ -33,9 +34,8 @@ class mywindow(QMainWindow):
     def __init__(self):
         super(mywindow, self).__init__()
         uic.loadUi('mainwindow.ui', self)
-        self.show()
 
-        self.cur_experiment_type = None
+        self.show()
 
         self.pushButtonRunAll.clicked.connect(self.run_experiments)
         self.pushButtonPFE.clicked.connect(self.show_PFE_results)
@@ -103,6 +103,7 @@ class mywindow(QMainWindow):
             g = self.tableDialogDFE4.geometry()
             g.setY(1500)
             self.tableDialogDFE4.setGeometry(g)
+        self.run_experiments()
 
     def get_current_min_maxes(self):
         gen_int_min = self.gen_int_min.value()
@@ -151,7 +152,10 @@ class mywindow(QMainWindow):
             if self.tableDialogPFE.comboBoxMatrix.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_PFE
             else:
-                full_results_table = self.horse.nat_full_results_table_PFE
+                if FLAG_REAL:
+                    full_results_table = self.horse.real_nat_full_results_table_PFE
+                else:
+                    full_results_table = self.horse.nat_full_results_table_PFE
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -169,7 +173,10 @@ class mywindow(QMainWindow):
             if self.comboBoxRegression.currentIndex() == 0:
                 coefficients = self.horse.norm_coefficients_PFE
             else:
-                coefficients = self.horse.nat_coefficients_PFE
+                if FLAG_REAL:
+                    coefficients = self.horse.real_nat_coefficients_PFE[:22]
+                else:
+                    coefficients = self.horse.nat_coefficients_PFE
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -209,7 +216,7 @@ class mywindow(QMainWindow):
             text_ends.append('*x1x2x3x4x5x6')
 
             linear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(FACTORS_NUMBER + 1)])
-            nonlinear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(2 ** FACTORS_NUMBER)])
+            nonlinear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(len(coefficients))])
 
             self.linearPFE.setText(linear_text)
             self.nonlinearPFE.setText(nonlinear_text)
@@ -223,7 +230,11 @@ class mywindow(QMainWindow):
             if self.tableDialogDFE4.comboBoxMatrix.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_DFE4_AAA
             else:
-                full_results_table = self.horse.nat_full_results_table_DFE4_AAA
+                if FLAG_REAL:
+                    full_results_table = self.horse.real_nat_full_results_table_DFE4_AAA
+                else:
+                    full_results_table = self.horse.nat_full_results_table_DFE4_AAA
+
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -240,7 +251,10 @@ class mywindow(QMainWindow):
             if self.comboBoxRegression.currentIndex() == 0:
                 coefficients = self.horse.norm_coefficients_DFE4_AAA
             else:
-                coefficients = self.horse.nat_coefficients_DFE4_AAA
+                if FLAG_REAL:
+                    coefficients = self.horse.real_nat_coefficients_DFE4_AAA[:22]
+                else:
+                    coefficients = self.horse.nat_coefficients_DFE4_AAA
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -267,7 +281,10 @@ class mywindow(QMainWindow):
             if self.tableDialogDFE2.comboBoxMatrix.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_DFE2_AAA
             else:
-                full_results_table = self.horse.nat_full_results_table_DFE2_AAA
+                if FLAG_REAL:
+                    full_results_table = self.horse.real_nat_full_results_table_DFE2_AAA
+                else:
+                    full_results_table = self.horse.nat_full_results_table_DFE2_AAA
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -284,7 +301,11 @@ class mywindow(QMainWindow):
             if self.comboBoxRegression.currentIndex() == 0:
                 coefficients = self.horse.norm_coefficients_DFE2_AAA
             else:
-                coefficients = self.horse.nat_coefficients_DFE2_AAA
+                if FLAG_REAL:
+                    coefficients = self.horse.real_nat_coefficients_DFE2_AAA[:22]
+                else:
+                    coefficients = self.horse.nat_coefficients_DFE2_AAA
+
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -310,7 +331,10 @@ class mywindow(QMainWindow):
             if self.tableDialogDFE4.comboBoxMatrix.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_DFE4
             else:
-                full_results_table = self.horse.nat_full_results_table_DFE4
+                if FLAG_REAL:
+                    full_results_table = self.horse.real_nat_full_results_table_DFE4
+                else:
+                    full_results_table = self.horse.nat_full_results_table_DFE4
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -327,7 +351,10 @@ class mywindow(QMainWindow):
             if self.comboBoxRegression.currentIndex() == 0:
                 coefficients = self.horse.norm_coefficients_DFE4
             else:
-                coefficients = self.horse.nat_coefficients_DFE4
+                if FLAG_REAL:
+                    coefficients = self.horse.real_nat_coefficients_DFE4
+                else:
+                    coefficients = self.horse.nat_coefficients_DFE4
 
             coefficients = np.round(coefficients, ROUND_TO)
 
@@ -355,7 +382,10 @@ class mywindow(QMainWindow):
             if self.tableDialogDFE2.comboBoxMatrix.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_DFE2
             else:
-                full_results_table = self.horse.nat_full_results_table_DFE2
+                if FLAG_REAL:
+                    full_results_table = self.horse.real_nat_full_results_table_DFE2
+                else:
+                    full_results_table = self.horse.nat_full_results_table_DFE2
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -372,7 +402,11 @@ class mywindow(QMainWindow):
             if self.comboBoxRegression.currentIndex() == 0:
                 coefficients = self.horse.norm_coefficients_DFE2
             else:
-                coefficients = self.horse.nat_coefficients_DFE2
+                if FLAG_REAL:
+                    coefficients = self.horse.real_nat_coefficients_DFE2
+                else:
+                    coefficients = self.horse.nat_coefficients_DFE2
+
 
             coefficients = np.round(coefficients, ROUND_TO)
 
