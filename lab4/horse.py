@@ -190,67 +190,7 @@ class Horse:
         self.OCKP_norm_matrix = norm_matrix
         self.OCKP_column_names = xs_column_names + ['y', 'y_nl', '|y-ynl|']
 
-    # def process_results_OCKP(self, experiment_results: np.array):
-    #     # b = [X^T * X]^-1  * X^T * y_exp
-    #     x = self.OCKP_norm_matrix
-    #     norm_coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
-    #                                experiment_results)
-    #
-    #     x = self.OCKP_natural_matrix
-    #     nat_coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
-    #                               experiment_results)
-    #     real_nat_coefficients = self.norm_to_natural_coefficients(norm_coefficients, FACTORS_NUMBER)
-    #
-    #     norm_nonlinear_approximations = [
-    #         sum(self.OCKP_norm_matrix[i, :] * norm_coefficients[:])
-    #         for i in range(M_SIZE)]
-    #     norm_linear_approximations = [
-    #         sum(self.OCKP_norm_matrix[i, :LIN_COEFS_AMOUNT] * norm_coefficients[:LIN_COEFS_AMOUNT])
-    #         for i in range(M_SIZE)]
-    #
-    #     nat_nonlinear_approximations = [
-    #         sum(self.OCKP_natural_matrix[i, :] * nat_coefficients[:])
-    #         for i in range(M_SIZE)]
-    #
-    #     real_nat_nonlinear_approximations = [
-    #         sum(self.OCKP_natural_matrix[i, :len(real_nat_coefficients)] * real_nat_coefficients[:])
-    #         for i in range(M_SIZE)]
-    #
-    #     nat_linear_approximations = [
-    #         sum(self.OCKP_natural_matrix[i, :LIN_COEFS_AMOUNT] * nat_coefficients[:LIN_COEFS_AMOUNT])
-    #         for i in range(M_SIZE)]
-    #
-    #     real_nat_linear_approximations = [
-    #         sum(self.OCKP_natural_matrix[i, :LIN_COEFS_AMOUNT] * real_nat_coefficients[:LIN_COEFS_AMOUNT])
-    #         for i in range(M_SIZE)]
-    #
-    #     # concatenate
-    #     norm_full_results = np.c_[self.OCKP_norm_matrix,
-    #                               experiment_results, norm_linear_approximations, norm_nonlinear_approximations,
-    #                               np.abs(experiment_results - norm_linear_approximations),
-    #                               np.abs(experiment_results - norm_nonlinear_approximations)]
-    #
-    #     nat_full_results = np.c_[self.OCKP_natural_matrix,
-    #                              experiment_results, nat_linear_approximations, nat_nonlinear_approximations,
-    #                              np.abs(experiment_results - nat_linear_approximations),
-    #                              np.abs(experiment_results - nat_nonlinear_approximations)]
-    #
-    #     real_nat_full_results = np.c_[self.OCKP_natural_matrix,
-    #                                   experiment_results, real_nat_linear_approximations, real_nat_nonlinear_approximations,
-    #                                   np.abs(experiment_results - real_nat_linear_approximations),
-    #                                   np.abs(experiment_results - real_nat_nonlinear_approximations)]
-    #
-    #     self.norm_full_results_table_OCKP = norm_full_results
-    #     self.norm_coefficients_OCKP = norm_coefficients
-    #
-    #     self.nat_full_results_table_OCKP = nat_full_results
-    #     self.nat_coefficients_OCKP = nat_coefficients
-    #
-    #     self.real_nat_full_results_table_OCKP = real_nat_full_results
-    #     self.real_nat_coefficients_OCKP = real_nat_coefficients
-    #
-    #     self.OCKP_column_names += ['y', 'y_l', 'y_nl', '|y-yl|', '|y-ynl|']
-    #
+
     def process_results_OCKP(self, experiment_results: np.array):
         diag_free = 1 / N_SIZE_OCKP
         diag_ones = 1 / (n_SIZE_PFE + 2 * self.alpha)

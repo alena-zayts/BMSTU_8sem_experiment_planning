@@ -1,8 +1,8 @@
 import numpy as np
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem, QDialog, QLineEdit
-
-from lab4.horse import Horse, FACTORS_NUMBER
+from copy import deepcopy
+from lab4.horse import Horse, FACTORS_NUMBER, SQUARE_AMOUNT
 
 ROUND_TO = 3
 
@@ -140,11 +140,22 @@ class mywindow(QMainWindow):
             for factor_index1 in range(1, FACTORS_NUMBER):
                 for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
                     text_ends.append(f'*x{factor_index1}x{factor_index2}')
-            for factor_index1 in range(1, FACTORS_NUMBER + 1):
-                text_ends.append(f'*(x{factor_index1}^2-S)')
 
-            nonlinear_text = ' '.join([f'{coefficients[i]:+}{text_ends[i]}' for i in range(len(coefficients))])
-            self.nonlinearOCKP.setText(nonlinear_text)
+            texts_ends_initial = deepcopy(text_ends)
+            texts_ends_preobr = deepcopy(text_ends)
+
+            for factor_index1 in range(1, FACTORS_NUMBER + 1):
+                texts_ends_initial.append(f'*(x{factor_index1}^2-S)')
+                texts_ends_preobr.append(f'*x{factor_index1}^2')
+
+            nonlinear_text_initial = ' '.join(
+                [f'{coefficients[i]:+}{texts_ends_initial[i]}' for i in range(len(coefficients))])
+
+            zero_coef_preobr = round(coefficients[0] - self.horse.S * sum(coefficients[-SQUARE_AMOUNT:]), ROUND_TO)
+            nonlinear_text_preobr = f'{zero_coef_preobr:+}*x0 ' + ' '.join(
+                [f'{coefficients[i]:+}{texts_ends_preobr[i]}' for i in range(1, len(coefficients))])
+
+            self.nonlinearOCKP.setText(nonlinear_text_initial + '=\n=' + nonlinear_text_preobr)
 
         except Exception as e:
             self.handle_error(repr(e))
