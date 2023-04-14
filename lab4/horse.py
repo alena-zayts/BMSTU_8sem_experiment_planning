@@ -11,15 +11,17 @@ from lab4.queue.processor import Processor
 
 FACTORS_NUMBER = 6
 FREE_AMOUNT = 1
+
 ONE_AMOUNT = FACTORS_NUMBER
 TWO_AMOUNT = (FACTORS_NUMBER * (FACTORS_NUMBER - 1)) // 2
 SQUARE_AMOUNT = FACTORS_NUMBER
-M_SIZE = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
+
+СOEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
 
 n_SIZE_PFE = pow(2, FACTORS_NUMBER)
-N_SIZE_OCKP = M_SIZE
+N_SIZE_OCKP = n_SIZE_PFE + 2 * FACTORS_NUMBER + 1
 
-N_REPEATS = 3
+N_REPEATS = 1
 
 EPS = 1e-10
 
@@ -109,33 +111,34 @@ class Horse:
             proc_int = EPS
 
         lambda_, mu, sigma = gen_int, 1 / proc_int, proc_var
-
+        if lambda_ < 0 or mu < 0 or sigma < 0:
+            print()
         return lambda_, mu, sigma
 
     def create_OCKP_plan_matrix(self):  # min_maxes: [[[min1, max1], [min2, max2], ...]
         self.S = sqrt(n_SIZE_PFE / N_SIZE_OCKP)
-        self.alpha = sqrt(n_SIZE_PFE * ((sqrt(N_SIZE_OCKP / n_SIZE_PFE)) - 1) / 2)
+        self.alpha = sqrt(n_SIZE_PFE * (sqrt(N_SIZE_OCKP / n_SIZE_PFE) - 1) / 2)
 
         xs_column_names = ['x0'] + \
                           [f'x{factor_index}' for factor_index in range(1, FACTORS_NUMBER + 1)] + \
                           [''] * TWO_AMOUNT + \
-                          [f'(x{factor_index})^2' for factor_index in range(1, FACTORS_NUMBER + 1)]
+                          [f'(x{factor_index})^2 - S' for factor_index in range(1, FACTORS_NUMBER + 1)]
 
         norm_row = (
                 [1] +  # x0
                 [0] * FACTORS_NUMBER +
-                [1] * TWO_AMOUNT +
-                [1] * SQUARE_AMOUNT
+                [0] * TWO_AMOUNT +
+                [0] * SQUARE_AMOUNT
         )
-        norm_matrix = np.array([norm_row for _ in range(M_SIZE)])
+        norm_matrix = np.array([norm_row for _ in range(N_SIZE_OCKP)], dtype=float)
 
         natural_row = (
                 [1] +
                 [0] * FACTORS_NUMBER +
-                [1] * TWO_AMOUNT +
-                [1] * SQUARE_AMOUNT
+                [0] * TWO_AMOUNT +
+                [0] * SQUARE_AMOUNT
         )
-        natural_matrix = np.array([natural_row for _ in range(M_SIZE)])
+        natural_matrix = np.array([natural_row for _ in range(N_SIZE_OCKP)], dtype=float)
 
         # ones (xi)
         for factor_index in range(1, FACTORS_NUMBER + 1):
@@ -144,15 +147,16 @@ class Horse:
             period = pow(2, FACTORS_NUMBER - factor_index)
 
             for start_plus in range(period, n_SIZE_PFE, 2 * period):
-                # add maxes
-                for row_number in range(start_plus, start_plus + period):
-                    natural_matrix[row_number, factor_index] = self.min_maxes_nat[factor_index - 1][1]
-                    norm_matrix[row_number, factor_index] = self.min_maxes_norm[factor_index - 1][1]
-
                 # add mins
-                for row_number in range(start_plus - period, start_plus):
-                    natural_matrix[row_number, factor_index] = self.min_maxes_nat[factor_index - 1][0]
-                    norm_matrix[row_number, factor_index] = self.min_maxes_norm[factor_index - 1][0]
+                for row_number_min in range(start_plus - period, start_plus):
+                    natural_matrix[row_number_min, factor_index] = self.min_maxes_nat[factor_index - 1][0]
+                    norm_matrix[row_number_min, factor_index] = self.min_maxes_norm[factor_index - 1][0]
+
+
+                # add maxes
+                for row_number_max in range(start_plus, start_plus + period):
+                    natural_matrix[row_number_max, factor_index] = self.min_maxes_nat[factor_index - 1][1]
+                    norm_matrix[row_number_max, factor_index] = self.min_maxes_norm[factor_index - 1][1]
 
             # next 2m: like -alpha, +alpha
             row_for_minus_alpha = n_SIZE_PFE + 2 * (factor_index - 1)
@@ -166,7 +170,7 @@ class Horse:
 
         # twos
         cur_factors_mult_index = FREE_AMOUNT + ONE_AMOUNT
-        for factor_index1 in range(1, FACTORS_NUMBER):
+        for factor_index1 in range(1, FACTORS_NUMBER + 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
                 xs_column_names[cur_factors_mult_index] = f'x{factor_index1}x{factor_index2}'
                 natural_matrix[:, cur_factors_mult_index] = natural_matrix[:, factor_index1] * \
@@ -175,12 +179,12 @@ class Horse:
                 cur_factors_mult_index += 1
 
         # zi^2 - S
-        for factor_index in range(1, FACTORS_NUMBER):
+        for factor_index in range(1, FACTORS_NUMBER + 1):
             natural_matrix[:, FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
-                natural_matrix[:, FACTORS_NUMBER] ** 2 - self.S
+                natural_matrix[:, factor_index] ** 2 - self.S
 
             norm_matrix[:, FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
-                norm_matrix[:, FACTORS_NUMBER] ** 2 - self.S
+                norm_matrix[:, factor_index] ** 2 - self.S
 
         self.OCKP_natural_matrix = natural_matrix
         self.OCKP_norm_matrix = norm_matrix
@@ -256,10 +260,10 @@ class Horse:
         c_diag_elements = [diag_free] + [diag_ones] * ONE_AMOUNT + \
                           [diag_twos] * TWO_AMOUNT + [diag_squares] * SQUARE_AMOUNT
 
-        norm_coefficients = [np.dot(self.OCKP_norm_matrix[i, :], experiment_results) * c_diag_elements
-                             for i in range(N_SIZE_OCKP)]
+        norm_coefficients = [np.dot(self.OCKP_norm_matrix[:, i], experiment_results) * c_diag_elements[i]
+                             for i in range(СOEFS_AMOUNT)]
 
-        norm_approximations = [sum(self.OCKP_norm_matrix[i, :] * norm_coefficients[:])
+        norm_approximations = [sum(self.OCKP_norm_matrix[i, :] * norm_coefficients)
                                for i in range(N_SIZE_OCKP)]
 
         # concatenate
@@ -278,7 +282,7 @@ class Horse:
         self.create_OCKP_plan_matrix()
 
         # print(plan_matrix_normalized)
-        experiment_results = np.zeros(M_SIZE)
+        experiment_results = np.zeros(N_SIZE_OCKP)
 
         for exp_number, exp_params in enumerate(self.OCKP_norm_matrix):
             gen_int = self.nat_factor_from_norm(exp_params[1], self.global_gen_int_min, self.global_gen_int_max)
@@ -361,26 +365,33 @@ class Horse:
         experiment_plan_row_norm_OCKP = np.array(
             [1] +
             [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2, proc_int_normalized2,
-             proc_var_normalized2, ] +
-            [1] * (M_SIZE - FACTORS_NUMBER - 1)
-
+             proc_var_normalized2] +
+            [0] * (TWO_AMOUNT + SQUARE_AMOUNT)
         )
+
         experiment_plan_row_nat_OCKP = np.array(
             [1] +
-            [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat, proc_int2_nat,
-             proc_var2_nat, ] +
-            [1] * (M_SIZE - FACTORS_NUMBER - 1)
+            [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat, proc_int2_nat, proc_var2_nat] +
+            [0] * (TWO_AMOUNT + SQUARE_AMOUNT)
         )
 
-        # 2
-        cur_factors_mult_index = 7
-        for factor_index1 in range(1, FACTORS_NUMBER):
+        # twos
+        cur_factors_mult_index = FACTORS_NUMBER + 1
+        for factor_index1 in range(1, FACTORS_NUMBER + 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
                 experiment_plan_row_norm_OCKP[cur_factors_mult_index] = (experiment_plan_row_norm_OCKP[factor_index1] *
                                                                          experiment_plan_row_norm_OCKP[factor_index2])
                 experiment_plan_row_nat_OCKP[cur_factors_mult_index] = (experiment_plan_row_nat_OCKP[factor_index1] *
                                                                         experiment_plan_row_nat_OCKP[factor_index2])
                 cur_factors_mult_index += 1
+
+        # zi^2 - S
+        for factor_index in range(1, FACTORS_NUMBER + 1):
+            experiment_plan_row_norm_OCKP[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
+                experiment_plan_row_norm_OCKP[FACTORS_NUMBER] ** 2 - self.S
+
+            experiment_plan_row_nat_OCKP[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
+                experiment_plan_row_nat_OCKP[:, FACTORS_NUMBER] ** 2 - self.S
 
         experiment_plan_row_norm_OCKP = np.array(experiment_plan_row_norm_OCKP)
         experiment_plan_row_nat_OCKP = np.array(experiment_plan_row_nat_OCKP)
