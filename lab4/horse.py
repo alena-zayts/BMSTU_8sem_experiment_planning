@@ -14,9 +14,10 @@ FREE_AMOUNT = 1
 
 ONE_AMOUNT = FACTORS_NUMBER
 TWO_AMOUNT = (FACTORS_NUMBER * (FACTORS_NUMBER - 1)) // 2
+THREE_AMOUNT = FACTORS_NUMBER * (FACTORS_NUMBER - 1) * 
 SQUARE_AMOUNT = FACTORS_NUMBER
 
-СOEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
+COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
 
 n_SIZE_PFE = pow(2, FACTORS_NUMBER)
 N_SIZE_OCKP = n_SIZE_PFE + 2 * FACTORS_NUMBER + 1
@@ -201,7 +202,7 @@ class Horse:
                           [diag_twos] * TWO_AMOUNT + [diag_squares] * SQUARE_AMOUNT
 
         norm_coefficients = [np.dot(self.OCKP_norm_matrix[:, i], experiment_results) * c_diag_elements[i]
-                             for i in range(СOEFS_AMOUNT)]
+                             for i in range(COEFS_AMOUNT)]
 
         norm_approximations = [sum(self.OCKP_norm_matrix[i, :] * norm_coefficients)
                                for i in range(N_SIZE_OCKP)]
