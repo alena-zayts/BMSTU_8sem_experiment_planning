@@ -104,20 +104,32 @@ class mywindow(QMainWindow):
 
     def show_OCKP_results(self, i):
         try:
-            # TODO: changes for natural?
             self.lineEditConstS: QLineEdit
             self.lineEditConstS.setText(str(round(self.horse.S, ROUND_TO)))
             self.lineEditStar.setText(str(round(self.horse.alpha, ROUND_TO)))
 
-            # if self.tableDialogOCKP.comboBoxRegression.currentIndex() == 0:
             if self.comboBoxRegression.currentIndex() == 0:
-                full_results_table = self.horse.norm_full_results_table_OCKP
-                coefficients = self.horse.norm_coefficients_OCKP
+                if self.comboBoxTwo.currentIndex() == 0:
+                    full_results_table = self.horse.norm_full_results_table_OCKP
+                    coefficients = self.horse.norm_coefficients_OCKP
+                    column_names = self.horse.OCKP_column_names
+                else:
+                    # TODO
+                    full_results_table = self.horse.norm_full_results_table_OCKP_full
+                    coefficients = self.horse.norm_coefficients_OCKP_full
+                    column_names = self.horse.OCKP_column_names_full
             else:
-                full_results_table = self.horse.nat_full_results_table_OCKP
-                coefficients = self.horse.nat_coefficients_OCKP
-            # TODO: other
-            column_names = self.horse.OCKP_column_names
+                if self.comboBoxTwo.currentIndex() == 0:
+                    # TODO
+                    full_results_table = self.horse.nat_full_results_table_OCKP
+                    coefficients = self.horse.nat_coefficients_OCKP
+                    column_names = self.horse.OCKP_column_names
+                else:
+                    # TODO
+                    full_results_table = self.horse.nat_full_results_table_OCKP_full
+                    coefficients = self.horse.nat_coefficients_OCKP_full
+                    column_names = self.horse.OCKP_column_names_full
+
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
@@ -133,31 +145,16 @@ class mywindow(QMainWindow):
                                              QTableWidgetItem(str(full_results_table[i, j])))
 
             coefficients = np.round(coefficients, ROUND_TO)
+            zero_coef = coefficients[0]
+            text_ends = [f'*{column_name}' for column_name in column_names[:-3]]
+            if self.comboBoxPreobr.currentIndex() == 0:
+                text_ends = text_ends[:-FACTORS_NUMBER] + [f'(x{factor_index})^2' for factor_index in range(1, FACTORS_NUMBER + 1)]
+                zero_coef = round(zero_coef - self.horse.S * sum(coefficients[-FACTORS_NUMBER:]), ROUND_TO)
 
-            if self.comboBoxPreobr
-            text_ends_initial = [f'*{column_name}' for column_name in column_names]
-            text_ends = [f'*x{i}' for i in range(FACTORS_NUMBER + 1)]
+            nonlinear_text = f'{zero_coef:+}*x0 ' + ' '.join(
+                [f'{coefficients[i]:+}{text_ends[i]}' for i in range(1, len(coefficients))])
 
-            # twos
-            for factor_index1 in range(1, FACTORS_NUMBER):
-                for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
-                    text_ends.append(f'*x{factor_index1}x{factor_index2}')
-
-            texts_ends_initial = deepcopy(text_ends)
-            texts_ends_preobr = deepcopy(text_ends)
-
-            for factor_index1 in range(1, FACTORS_NUMBER + 1):
-                texts_ends_initial.append(f'*(x{factor_index1}^2-S)')
-                texts_ends_preobr.append(f'*x{factor_index1}^2')
-
-            nonlinear_text_initial = ' '.join(
-                [f'{coefficients[i]:+}{texts_ends_initial[i]}' for i in range(len(coefficients))])
-
-            zero_coef_preobr = round(coefficients[0] - self.horse.S * sum(coefficients[-SQUARE_AMOUNT:]), ROUND_TO)
-            nonlinear_text_preobr = f'{zero_coef_preobr:+}*x0 ' + ' '.join(
-                [f'{coefficients[i]:+}{texts_ends_preobr[i]}' for i in range(1, len(coefficients))])
-
-            self.nonlinearOCKP.setText(nonlinear_text_initial + '=\n=' + nonlinear_text_preobr)
+            self.nonlinearOCKP.setText(nonlinear_text)
 
         except Exception as e:
             self.handle_error(repr(e))

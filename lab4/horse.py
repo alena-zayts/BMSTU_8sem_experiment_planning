@@ -160,7 +160,6 @@ class Horse:
                     natural_matrix[row_number_min, factor_index] = self.min_maxes_nat[factor_index - 1][0]
                     norm_matrix[row_number_min, factor_index] = self.min_maxes_norm[factor_index - 1][0]
 
-
                 # add maxes
                 for row_number_max in range(start_plus, start_plus + period):
                     natural_matrix[row_number_max, factor_index] = self.min_maxes_nat[factor_index - 1][1]
@@ -198,12 +197,12 @@ class Horse:
         self.OCKP_norm_matrix = norm_matrix
         self.OCKP_column_names = xs_column_names + ['y', 'y_nl', '|y-ynl|']
 
-        self.build_full()
+        self.create_OCKP_plan_matrix_full()
 
     def add_column(self, arr, index, column):
         return np.hstack((arr[:, :index], np.ndarray((len(column), 1), buffer=column), arr[:, index:]))
 
-    def build_full(self):
+    def create_OCKP_plan_matrix_full(self):
         natural_matrix = deepcopy(self.OCKP_natural_matrix)
         norm_matrix = deepcopy(self.OCKP_norm_matrix)
         xs_column_names = deepcopy(self.OCKP_column_names)
@@ -213,7 +212,6 @@ class Horse:
         for factor_index1 in range(1, FACTORS_NUMBER - 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
                 for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
-
                     xs_column_names.insert(cur_factors_mult_index, f'x{factor_index1}x{factor_index2}x{factor_index3}')
                     natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
                             natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
@@ -245,7 +243,8 @@ class Horse:
                 for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER - 1):
                     for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
                         for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
-                            xs_column_names.insert(cur_factors_mult_index, f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}x{factor_index5}')
+                            xs_column_names.insert(cur_factors_mult_index,
+                                                   f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}x{factor_index5}')
                             natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
                                     natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
                                     natural_matrix[:, factor_index3] * natural_matrix[:, factor_index4] *
@@ -269,8 +268,6 @@ class Horse:
         self.OCKP_natural_matrix_full = natural_matrix
         self.OCKP_norm_matrix_full = norm_matrix
         self.OCKP_column_names_full = xs_column_names
-
-
 
     def process_results_OCKP(self, experiment_results: np.array):
         diag_free = 1 / N_SIZE_OCKP
@@ -453,7 +450,6 @@ class Horse:
             for combination in combinations_by:
                 b[combination] = norm_coefficients[cur_index_in_coefficients]
                 cur_index_in_coefficients += 1
-
 
         # b_nat = deepcopy(b)
         b_nat = defaultdict(int)
