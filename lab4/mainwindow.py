@@ -57,8 +57,9 @@ class mywindow(QMainWindow):
         self.check_button.clicked.connect(self.check_button_clicked)
         self.check_button.setDisabled(True)
 
-        self.comboBoxMatrix.currentIndexChanged.connect(self.show_OCKP_results)
         self.comboBoxRegression.currentIndexChanged.connect(self.show_OCKP_results)
+        self.comboBoxPreobr.currentIndexChanged.connect(self.show_OCKP_results)
+        self.comboBoxTwo.currentIndexChanged.connect(self.show_OCKP_results)
 
         initial_min_maxes = self.get_current_min_maxes()
         self.horse = Horse(*initial_min_maxes)
@@ -108,17 +109,21 @@ class mywindow(QMainWindow):
             self.lineEditConstS.setText(str(round(self.horse.S, ROUND_TO)))
             self.lineEditStar.setText(str(round(self.horse.alpha, ROUND_TO)))
 
-            # if self.tableDialogOCKP.comboBoxMatrix.currentIndex() == 0:
-            if self.comboBoxMatrix.currentIndex() == 0:
+            # if self.tableDialogOCKP.comboBoxRegression.currentIndex() == 0:
+            if self.comboBoxRegression.currentIndex() == 0:
                 full_results_table = self.horse.norm_full_results_table_OCKP
+                coefficients = self.horse.norm_coefficients_OCKP
             else:
                 full_results_table = self.horse.nat_full_results_table_OCKP
+                coefficients = self.horse.nat_coefficients_OCKP
+            # TODO: other
+            column_names = self.horse.OCKP_column_names
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
             self.tableWidget.clear()
-            self.tableWidget.setColumnCount(len(self.horse.OCKP_column_names))
-            self.tableWidget.setHorizontalHeaderLabels(self.horse.OCKP_column_names)
+            self.tableWidget.setColumnCount(len(column_names))
+            self.tableWidget.setHorizontalHeaderLabels(column_names)
 
             self.tableWidget.setRowCount(0)
             for i, row in enumerate(full_results_table):
@@ -127,13 +132,10 @@ class mywindow(QMainWindow):
                     self.tableWidget.setItem(self.tableWidget.rowCount() - 1, j,
                                              QTableWidgetItem(str(full_results_table[i, j])))
 
-            if self.comboBoxRegression.currentIndex() == 0:
-                coefficients = self.horse.norm_coefficients_OCKP
-            else:
-                coefficients = self.horse.nat_coefficients_OCKP
-
             coefficients = np.round(coefficients, ROUND_TO)
 
+            if self.comboBoxPreobr
+            text_ends_initial = [f'*{column_name}' for column_name in column_names]
             text_ends = [f'*x{i}' for i in range(FACTORS_NUMBER + 1)]
 
             # twos

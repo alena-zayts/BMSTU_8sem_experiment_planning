@@ -14,10 +14,14 @@ FREE_AMOUNT = 1
 
 ONE_AMOUNT = FACTORS_NUMBER
 TWO_AMOUNT = (FACTORS_NUMBER * (FACTORS_NUMBER - 1)) // 2
-THREE_AMOUNT = FACTORS_NUMBER * (FACTORS_NUMBER - 1) * 
+THREE_AMOUNT = (FACTORS_NUMBER - 2) * (FACTORS_NUMBER - 1) * FACTORS_NUMBER // 6
+FOUR_AMOUNT = TWO_AMOUNT
+FIVE_AMOUNT = ONE_AMOUNT
+SIX_AMOUNT = 1
 SQUARE_AMOUNT = FACTORS_NUMBER
 
-COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
+# 70
+COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + THREE_AMOUNT + FOUR_AMOUNT + FIVE_AMOUNT + SIX_AMOUNT + SQUARE_AMOUNT
 
 n_SIZE_PFE = pow(2, FACTORS_NUMBER)
 N_SIZE_OCKP = n_SIZE_PFE + 2 * FACTORS_NUMBER + 1
@@ -66,6 +70,9 @@ class Horse:
         self.OCKP_natural_matrix = None
         self.OCKP_norm_matrix = None
         self.OCKP_column_names = None
+        self.OCKP_natural_matrix_full = None
+        self.OCKP_norm_matrix_full = None
+        self.OCKP_column_names_full = None
 
     def set_cur_min_maxes(self, gen_int_min, gen_int_max, proc_int_min, proc_int_max, proc_var_min, proc_var_max,
                           gen_int_min2, gen_int_max2, proc_int_min2, proc_int_max2, proc_var_min2, proc_var_max2,
@@ -190,6 +197,79 @@ class Horse:
         self.OCKP_natural_matrix = natural_matrix
         self.OCKP_norm_matrix = norm_matrix
         self.OCKP_column_names = xs_column_names + ['y', 'y_nl', '|y-ynl|']
+
+        self.build_full()
+
+    def add_column(self, arr, index, column):
+        return np.hstack((arr[:, :index], np.ndarray((len(column), 1), buffer=column), arr[:, index:]))
+
+    def build_full(self):
+        natural_matrix = deepcopy(self.OCKP_natural_matrix)
+        norm_matrix = deepcopy(self.OCKP_norm_matrix)
+        xs_column_names = deepcopy(self.OCKP_column_names)
+
+        cur_factors_mult_index = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT
+        # 3
+        for factor_index1 in range(1, FACTORS_NUMBER - 1):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
+
+                    xs_column_names.insert(cur_factors_mult_index, f'x{factor_index1}x{factor_index2}x{factor_index3}')
+                    natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
+                            natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
+                            natural_matrix[:, factor_index3]))
+                    norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
+                            norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2] *
+                            norm_matrix[:, factor_index3]))
+                    cur_factors_mult_index += 1
+
+        # 4
+        for factor_index1 in range(1, FACTORS_NUMBER - 2):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 1):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER):
+                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER + 1):
+                        xs_column_names.insert(cur_factors_mult_index,
+                                               f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}')
+
+                        natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
+                                natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
+                                natural_matrix[:, factor_index3] * natural_matrix[:, factor_index4]))
+                        norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
+                                norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2] *
+                                norm_matrix[:, factor_index3] * norm_matrix[:, factor_index2]))
+                        cur_factors_mult_index += 1
+
+        # 5
+        for factor_index1 in range(1, FACTORS_NUMBER - 3):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 2):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER - 1):
+                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
+                        for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
+                            xs_column_names.insert(cur_factors_mult_index, f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}x{factor_index5}')
+                            natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
+                                    natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
+                                    natural_matrix[:, factor_index3] * natural_matrix[:, factor_index4] *
+                                    natural_matrix[:, factor_index5]))
+                            norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
+                                    norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2] *
+                                    norm_matrix[:, factor_index3] * norm_matrix[:, factor_index2] *
+                                    norm_matrix[:, factor_index5]))
+                            cur_factors_mult_index += 1
+
+        assert cur_factors_mult_index == n_SIZE_PFE - 1
+        xs_column_names.insert(cur_factors_mult_index, 'x1x2x3x4x5x6')
+
+        natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
+                natural_matrix[:, 1] * natural_matrix[:, 2] * natural_matrix[:, 3] *
+                natural_matrix[:, 4] * natural_matrix[:, 5] * natural_matrix[:, 6]))
+        norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
+                norm_matrix[:, 1] * norm_matrix[:, 2] * norm_matrix[:, 3] *
+                norm_matrix[:, 4] * norm_matrix[:, 5] * norm_matrix[:, 6]))
+
+        self.OCKP_natural_matrix_full = natural_matrix
+        self.OCKP_norm_matrix_full = norm_matrix
+        self.OCKP_column_names_full = xs_column_names
+
 
 
     def process_results_OCKP(self, experiment_results: np.array):
@@ -374,7 +454,7 @@ class Horse:
                 b[combination] = norm_coefficients[cur_index_in_coefficients]
                 cur_index_in_coefficients += 1
 
-        # ??
+
         # b_nat = deepcopy(b)
         b_nat = defaultdict(int)
         b0_nat = 0
