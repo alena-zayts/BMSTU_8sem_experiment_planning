@@ -21,12 +21,14 @@ SIX_AMOUNT = 1
 SQUARE_AMOUNT = FACTORS_NUMBER
 
 # 70
-COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + THREE_AMOUNT + FOUR_AMOUNT + FIVE_AMOUNT + SIX_AMOUNT + SQUARE_AMOUNT
+COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + THREE_AMOUNT + FOUR_AMOUNT + \
+               FIVE_AMOUNT + SIX_AMOUNT + SQUARE_AMOUNT
+SMALL_COEFS_AMOUNT = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + SQUARE_AMOUNT
 
 n_SIZE_PFE = pow(2, FACTORS_NUMBER)
 N_SIZE_OCKP = n_SIZE_PFE + 2 * FACTORS_NUMBER + 1
 
-N_REPEATS = 1
+N_REPEATS = 10
 
 EPS = 1e-10
 
@@ -62,17 +64,14 @@ class Horse:
 
         self.S = 1e10
         self.alpha = 1e10
-        self.norm_full_results_table_OCKP = None
-        self.norm_coefficients_OCKP = None
-        self.nat_full_results_table_OCKP = None
-        self.nat_coefficients_OCKP = None
 
-        self.OCKP_natural_matrix = None
-        self.OCKP_norm_matrix = None
-        self.OCKP_column_names = None
-        self.OCKP_natural_matrix_full = None
-        self.OCKP_norm_matrix_full = None
-        self.OCKP_column_names_full = None
+        self.OCKP_natural_matrix, self.OCKP_norm_matrix, self.OCKP_column_names = None, None, None
+        self.OCKP_natural_matrix_full, self.OCKP_norm_matrix_full, self.OCKP_column_names_full = None, None, None
+
+        self.norm_full_results_table_OCKP, self.norm_coefficients_OCKP = None, None
+        self.nat_full_results_table_OCKP, self.nat_coefficients_OCKP = None, None
+        self.norm_full_results_table_OCKP_full, self.norm_coefficients_OCKP_full = None, None
+        self.nat_full_results_table_OCKP_full, self.nat_coefficients_OCKP_full = None, None
 
     def set_cur_min_maxes(self, gen_int_min, gen_int_max, proc_int_min, proc_int_max, proc_var_min, proc_var_max,
                           gen_int_min2, gen_int_max2, proc_int_min2, proc_int_max2, proc_var_min2, proc_var_max2,
@@ -104,15 +103,18 @@ class Horse:
             for i in range(len(self.min_maxes_global))
         ]
 
-    def nat_factor_from_norm(self, x_norm, xmin_nat, xmax_nat):
+    @staticmethod
+    def nat_factor_from_norm(x_norm, xmin_nat, xmax_nat):
         return x_norm * (xmax_nat - xmin_nat) / 2 + (xmax_nat + xmin_nat) / 2
 
-    def norm_factor_from_nat(self, x_nat, xmin_nat, xmax_nat):
+    @staticmethod
+    def norm_factor_from_nat(x_nat, xmin_nat, xmax_nat):
         x0 = (xmin_nat + xmax_nat) / 2
         interval = (xmax_nat - xmin_nat) / 2
         return (x_nat - x0) / interval
 
-    def convert_params(self, gen_int, proc_int, proc_var):
+    @staticmethod
+    def convert_params(gen_int, proc_int, proc_var):
         if gen_int == 0:
             gen_int = EPS
         if proc_int == 0:
@@ -130,7 +132,7 @@ class Horse:
         xs_column_names = ['x0'] + \
                           [f'x{factor_index}' for factor_index in range(1, FACTORS_NUMBER + 1)] + \
                           [''] * TWO_AMOUNT + \
-                          [f'(x{factor_index})^2 - S' for factor_index in range(1, FACTORS_NUMBER + 1)]
+                          [f'((x{factor_index})^2 - S)' for factor_index in range(1, FACTORS_NUMBER + 1)]
 
         norm_row = (
                 [1] +  # x0
@@ -180,8 +182,8 @@ class Horse:
         for factor_index1 in range(1, FACTORS_NUMBER + 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
                 xs_column_names[cur_factors_mult_index] = f'x{factor_index1}x{factor_index2}'
-                natural_matrix[:, cur_factors_mult_index] = natural_matrix[:, factor_index1] * \
-                                                            natural_matrix[:, factor_index2]
+                natural_matrix[:, cur_factors_mult_index] = \
+                    natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2]
                 norm_matrix[:, cur_factors_mult_index] = norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2]
                 cur_factors_mult_index += 1
 
@@ -195,11 +197,12 @@ class Horse:
 
         self.OCKP_natural_matrix = natural_matrix
         self.OCKP_norm_matrix = norm_matrix
-        self.OCKP_column_names = xs_column_names + ['y', 'y_nl', '|y-ynl|']
+        self.OCKP_column_names = xs_column_names + ['y', 'y_nl', '|y-ynl|', '(|y-ynl|/y)*100%']
 
         self.create_OCKP_plan_matrix_full()
 
-    def add_column(self, arr, index, column):
+    @staticmethod
+    def add_column(arr, index, column):
         return np.hstack((arr[:, :index], np.ndarray((len(column), 1), buffer=column), arr[:, index:]))
 
     def create_OCKP_plan_matrix_full(self):
@@ -234,7 +237,7 @@ class Horse:
                                 natural_matrix[:, factor_index3] * natural_matrix[:, factor_index4]))
                         norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
                                 norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2] *
-                                norm_matrix[:, factor_index3] * norm_matrix[:, factor_index2]))
+                                norm_matrix[:, factor_index3] * norm_matrix[:, factor_index4]))
                         cur_factors_mult_index += 1
 
         # 5
@@ -244,14 +247,15 @@ class Horse:
                     for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
                         for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
                             xs_column_names.insert(cur_factors_mult_index,
-                                                   f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}x{factor_index5}')
+                                                   f'x{factor_index1}x{factor_index2}x{factor_index3}x{factor_index4}'
+                                                   f'x{factor_index5}')
                             natural_matrix = self.add_column(natural_matrix, cur_factors_mult_index, (
                                     natural_matrix[:, factor_index1] * natural_matrix[:, factor_index2] *
                                     natural_matrix[:, factor_index3] * natural_matrix[:, factor_index4] *
                                     natural_matrix[:, factor_index5]))
                             norm_matrix = self.add_column(norm_matrix, cur_factors_mult_index, (
                                     norm_matrix[:, factor_index1] * norm_matrix[:, factor_index2] *
-                                    norm_matrix[:, factor_index3] * norm_matrix[:, factor_index2] *
+                                    norm_matrix[:, factor_index3] * norm_matrix[:, factor_index4] *
                                     norm_matrix[:, factor_index5]))
                             cur_factors_mult_index += 1
 
@@ -279,7 +283,7 @@ class Horse:
                           [diag_twos] * TWO_AMOUNT + [diag_squares] * SQUARE_AMOUNT
 
         norm_coefficients = [np.dot(self.OCKP_norm_matrix[:, i], experiment_results) * c_diag_elements[i]
-                             for i in range(COEFS_AMOUNT)]
+                             for i in range(SMALL_COEFS_AMOUNT)]
 
         norm_approximations = [sum(self.OCKP_norm_matrix[i, :] * norm_coefficients)
                                for i in range(N_SIZE_OCKP)]
@@ -287,19 +291,38 @@ class Horse:
         # concatenate
         norm_full_results = np.c_[self.OCKP_norm_matrix,
                                   experiment_results, norm_approximations,
-                                  np.abs(experiment_results - norm_approximations)]
+                                  np.abs(experiment_results - norm_approximations),
+                                  100 * np.abs(experiment_results - norm_approximations) / experiment_results
+        ]
 
         self.norm_full_results_table_OCKP = norm_full_results
         self.norm_coefficients_OCKP = norm_coefficients
 
-        # TODO
-        self.nat_full_results_table_OCKP = norm_full_results
-        self.nat_coefficients_OCKP = norm_coefficients
+
+        self.nat_full_results_table_OCKP, self.nat_coefficients_OCKP = \
+            self.process_results_OCKP_universal(experiment_results, self.OCKP_natural_matrix)
+
+        self.nat_full_results_table_OCKP_full, self.nat_coefficients_OCKP_full = \
+            self.process_results_OCKP_universal(experiment_results, self.OCKP_natural_matrix_full)
+
+        self.norm_full_results_table_OCKP_full, self.norm_coefficients_OCKP_full = \
+            self.process_results_OCKP_universal(experiment_results, self.OCKP_norm_matrix_full)
+
+    @staticmethod
+    def process_results_OCKP_universal(experiment_results: np.array, x: np.array):
+        # b = [X^T * X]^-1  * X^T * y_exp
+        coefficients = np.dot(np.dot(np.linalg.inv(np.dot(np.transpose(x), x)), np.transpose(x)),
+                              experiment_results)
+        approximations = [sum(x[i, :] * coefficients) for i in range(len(x))]
+
+        full_results = np.c_[x, experiment_results, approximations, np.abs(experiment_results - approximations),
+                             100 * np.abs(experiment_results - approximations) / experiment_results]
+
+        return full_results, coefficients
 
     def run_OCKP(self):
         self.create_OCKP_plan_matrix()
 
-        # print(plan_matrix_normalized)
         experiment_results = np.zeros(N_SIZE_OCKP)
 
         for exp_number, exp_params in enumerate(self.OCKP_norm_matrix):
@@ -380,14 +403,14 @@ class Horse:
 
         experiment_result = sum(cur_experiment_results) / N_REPEATS
 
-        experiment_plan_row_norm_OCKP = np.array(
+        experiment_plan_row_norm = np.array(
             [1] +
             [gen_int_normalized, proc_int_normalized, proc_var_normalized, gen_int_normalized2, proc_int_normalized2,
              proc_var_normalized2] +
             [0] * (TWO_AMOUNT + SQUARE_AMOUNT)
         )
 
-        experiment_plan_row_nat_OCKP = np.array(
+        experiment_plan_row_nat = np.array(
             [1] +
             [gen_int_nat, proc_int_nat, proc_var_nat, gen_int2_nat, proc_int2_nat, proc_var2_nat] +
             [0] * (TWO_AMOUNT + SQUARE_AMOUNT)
@@ -397,39 +420,122 @@ class Horse:
         cur_factors_mult_index = FACTORS_NUMBER + 1
         for factor_index1 in range(1, FACTORS_NUMBER + 1):
             for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER + 1):
-                experiment_plan_row_norm_OCKP[cur_factors_mult_index] = (experiment_plan_row_norm_OCKP[factor_index1] *
-                                                                         experiment_plan_row_norm_OCKP[factor_index2])
-                experiment_plan_row_nat_OCKP[cur_factors_mult_index] = (experiment_plan_row_nat_OCKP[factor_index1] *
-                                                                        experiment_plan_row_nat_OCKP[factor_index2])
+                experiment_plan_row_norm[cur_factors_mult_index] = (experiment_plan_row_norm[factor_index1] *
+                                                                    experiment_plan_row_norm[factor_index2])
+                experiment_plan_row_nat[cur_factors_mult_index] = (experiment_plan_row_nat[factor_index1] *
+                                                                   experiment_plan_row_nat[factor_index2])
                 cur_factors_mult_index += 1
 
         # zi^2 - S
         for factor_index in range(1, FACTORS_NUMBER + 1):
-            experiment_plan_row_norm_OCKP[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
-                experiment_plan_row_norm_OCKP[FACTORS_NUMBER] ** 2 - self.S
+            experiment_plan_row_norm[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
+                experiment_plan_row_norm[factor_index] ** 2 - self.S
 
-            experiment_plan_row_nat_OCKP[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
-                experiment_plan_row_nat_OCKP[:, FACTORS_NUMBER] ** 2 - self.S
+            experiment_plan_row_nat[FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT + factor_index - 1] = \
+                experiment_plan_row_nat[factor_index] ** 2 - self.S
 
-        experiment_plan_row_norm_OCKP = np.array(experiment_plan_row_norm_OCKP)
-        experiment_plan_row_nat_OCKP = np.array(experiment_plan_row_nat_OCKP)
+        ########### full
+        experiment_plan_row_norm_full = list(deepcopy(experiment_plan_row_norm))
+        experiment_plan_row_nat_full = list(deepcopy(experiment_plan_row_nat))
 
-        nonlinear_approximation_norm_OCKP = sum(experiment_plan_row_norm_OCKP * self.norm_coefficients_OCKP)
-        nonlinear_approximation_nat_OCKP = sum(experiment_plan_row_nat_OCKP * self.nat_coefficients_OCKP)
+        cur_factors_mult_index = FREE_AMOUNT + ONE_AMOUNT + TWO_AMOUNT
+        # 3
+        for factor_index1 in range(1, FACTORS_NUMBER - 1):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER + 1):
+                    experiment_plan_row_norm_full.insert(cur_factors_mult_index, (
+                            experiment_plan_row_norm_full[factor_index1] *
+                            experiment_plan_row_norm_full[factor_index2] *
+                            experiment_plan_row_norm_full[factor_index3]))
 
-        total_norm_OCKP = list(experiment_plan_row_norm_OCKP)
-        total_nat_OCKP = list(experiment_plan_row_nat_OCKP)
+                    experiment_plan_row_nat_full.insert(cur_factors_mult_index, (
+                            experiment_plan_row_nat_full[factor_index1] *
+                            experiment_plan_row_nat_full[factor_index2] *
+                            experiment_plan_row_nat_full[factor_index3]))
 
-        total_norm_OCKP.extend([
-            experiment_result, nonlinear_approximation_norm_OCKP,
-            np.abs(experiment_result - nonlinear_approximation_norm_OCKP)])
+                    cur_factors_mult_index += 1
 
-        total_nat_OCKP.extend([
-            experiment_result, nonlinear_approximation_nat_OCKP,
-            np.abs(experiment_result - nonlinear_approximation_nat_OCKP)])
+        # 4
+        for factor_index1 in range(1, FACTORS_NUMBER - 2):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 1):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER):
+                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER + 1):
+                        experiment_plan_row_norm_full.insert(cur_factors_mult_index, (
+                                experiment_plan_row_norm_full[factor_index1] *
+                                experiment_plan_row_norm_full[factor_index2] *
+                                experiment_plan_row_norm_full[factor_index3] *
+                                experiment_plan_row_norm_full[factor_index4]))
+
+                        experiment_plan_row_nat_full.insert(cur_factors_mult_index, (
+                                experiment_plan_row_nat_full[factor_index1] *
+                                experiment_plan_row_nat_full[factor_index2] *
+                                experiment_plan_row_nat_full[factor_index3] *
+                                experiment_plan_row_nat_full[factor_index4]))
+                        cur_factors_mult_index += 1
+
+        # 5
+        for factor_index1 in range(1, FACTORS_NUMBER - 3):
+            for factor_index2 in range(factor_index1 + 1, FACTORS_NUMBER - 2):
+                for factor_index3 in range(factor_index2 + 1, FACTORS_NUMBER - 1):
+                    for factor_index4 in range(factor_index3 + 1, FACTORS_NUMBER):
+                        for factor_index5 in range(factor_index4 + 1, FACTORS_NUMBER + 1):
+                            experiment_plan_row_norm_full.insert(cur_factors_mult_index, (
+                                    experiment_plan_row_norm_full[factor_index1] *
+                                    experiment_plan_row_norm_full[factor_index2] *
+                                    experiment_plan_row_norm_full[factor_index3] *
+                                    experiment_plan_row_norm_full[factor_index4] *
+                                    experiment_plan_row_norm_full[factor_index5]))
+
+                            experiment_plan_row_nat_full.insert(cur_factors_mult_index, (
+                                    experiment_plan_row_nat_full[factor_index1] *
+                                    experiment_plan_row_nat_full[factor_index2] *
+                                    experiment_plan_row_nat_full[factor_index3] *
+                                    experiment_plan_row_nat_full[factor_index4] *
+                                    experiment_plan_row_nat_full[factor_index5]))
+                            cur_factors_mult_index += 1
+
+        assert cur_factors_mult_index == n_SIZE_PFE - 1
+        experiment_plan_row_norm_full.insert(cur_factors_mult_index, (
+                experiment_plan_row_norm_full[1] *
+                experiment_plan_row_norm_full[2] *
+                experiment_plan_row_norm_full[3] *
+                experiment_plan_row_norm_full[4] *
+                experiment_plan_row_norm_full[5] *
+                experiment_plan_row_norm_full[6]))
+        experiment_plan_row_nat_full.insert(cur_factors_mult_index, (
+                experiment_plan_row_nat_full[1] *
+                experiment_plan_row_nat_full[2] *
+                experiment_plan_row_nat_full[3] *
+                experiment_plan_row_nat_full[4] *
+                experiment_plan_row_nat_full[5] *
+                experiment_plan_row_nat_full[6]))
+        ################# end
+
+        nonlinear_approximation_norm_OCKP = sum(np.array(experiment_plan_row_norm) * self.norm_coefficients_OCKP)
+        nonlinear_approximation_nat_OCKP = sum(np.array(experiment_plan_row_nat) * self.nat_coefficients_OCKP)
+        nonlinear_approximation_norm_OCKP_full = sum(
+            np.array(experiment_plan_row_norm_full) * self.norm_coefficients_OCKP_full)
+        nonlinear_approximation_nat_OCKP_full = sum(
+            np.array(experiment_plan_row_nat_full) * self.nat_coefficients_OCKP_full)
+
+        total_norm_OCKP = list(experiment_plan_row_norm)
+        total_nat_OCKP = list(experiment_plan_row_nat)
+        total_norm_OCKP_full = list(experiment_plan_row_norm_full)
+        total_nat_OCKP_full = list(experiment_plan_row_nat_full)
+
+        total_norm_OCKP.extend([experiment_result, nonlinear_approximation_norm_OCKP,
+                                np.abs(experiment_result - nonlinear_approximation_norm_OCKP)])
+        total_nat_OCKP.extend([experiment_result, nonlinear_approximation_nat_OCKP,
+                               np.abs(experiment_result - nonlinear_approximation_nat_OCKP)])
+        total_norm_OCKP_full.extend([experiment_result, nonlinear_approximation_norm_OCKP_full,
+                                     np.abs(experiment_result - nonlinear_approximation_norm_OCKP_full)])
+        total_nat_OCKP_full.extend([experiment_result, nonlinear_approximation_nat_OCKP_full,
+                                    np.abs(experiment_result - nonlinear_approximation_nat_OCKP_full)])
 
         self.norm_full_results_table_OCKP = np.r_[self.norm_full_results_table_OCKP, [total_norm_OCKP]]
         self.nat_full_results_table_OCKP = np.r_[self.nat_full_results_table_OCKP, [total_nat_OCKP]]
+        self.norm_full_results_table_OCKP_full = np.r_[self.norm_full_results_table_OCKP_full, [total_norm_OCKP_full]]
+        self.nat_full_results_table_OCKP_full = np.r_[self.nat_full_results_table_OCKP_full, [total_nat_OCKP_full]]
 
     def norm_to_natural_coefficients(self, norm_coefficients, n_factors):
         norm_coefficients = list(norm_coefficients)

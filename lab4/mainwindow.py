@@ -5,6 +5,7 @@ from copy import deepcopy
 from lab4.horse import Horse, FACTORS_NUMBER, SQUARE_AMOUNT
 
 ROUND_TO = 3
+ADDED_COLUMNS_AMOUNT = 4
 
 # интервал варьирования загрузки системы: 0.05-1 ->
 # мин инт генератора / макс инт ОА = 0.01
@@ -15,7 +16,7 @@ ROUND_TO = 3
 # но тогда -alpha < 0 в генераторе
 
 # новое
-# интервал варьирования загрузки системы: 0.1-1 ->
+# интервал варьирования загрузки системы: 0.1-1 (получилось только 0.2-0.9)
 # мин инт генератора / макс инт ОА = 0.2
 # макс инт генератора / мин инт ОА = 0.9
 # для alpha 2ming > maxg и 2mino > max0
@@ -24,7 +25,27 @@ ROUND_TO = 3
 # инт ОА         2 - 4
 # получилось 0.2 - 0.8
 # но тогда -alpha < 0 в генераторе
+params_big = {
+    'gmin1': 0.4, 'gmin2': 0.4,
+    'gmax1': 0.8, 'gmax2': 0.8,
+    'omin1': 2, 'omin2': 2,
+    'omax1': 4, 'omax2': 4
+}
 
+params_1 = {
+    'gmin1': 0.9, 'gmin2': 0.9,
+    'gmax1': 1, 'gmax2': 1,
+    'omin1': 2, 'omin2': 2,
+    'omax1': 2.4, 'omax2': 2.4
+}
+
+def calc(d):
+    min_ = 2 * (d['gmin1'] + d['gmin2']) / (d['omax1'] + d['omax2'])
+    max_ = 2 * (d['gmax1'] + d['gmax2']) / (d['omin1'] + d['omin2'])
+    print(min_, max_)
+
+calc(params_big)
+calc(params_1)
 
 # m = 6
 # n = 2^6 = 64
@@ -36,20 +57,26 @@ QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 FLAG_STRANGE_MATRIX = False
-FLAG_REAL = False
 
-
-class TableDialog(QDialog):
-    def __init__(self):
-        super(TableDialog, self).__init__()
-        uic.loadUi('dialog.ui', self)
 
 
 class mywindow(QMainWindow):
+    def set_params(self, d):
+        self.gen_int_min.setValue(d['gmin1'])
+        self.gen_int_max.setValue(d['gmax1'])
+        self.proc_int_min.setValue(d['omin1'])
+        self.proc_int_max.setValue(d['omax1'])
+
+        self.gen_int_min_2.setValue(d['gmin2'])
+        self.gen_int_max_2.setValue(d['gmax2'])
+        self.proc_int_min_2.setValue(d['omin2'])
+        self.proc_int_max_2.setValue(d['omax2'])
+
     def __init__(self):
         super(mywindow, self).__init__()
         uic.loadUi('mainwindow.ui', self)
 
+        self.set_params(params_1)
         self.show()
 
         self.pushButtonRunAll.clicked.connect(self.run_experiments)
@@ -65,6 +92,9 @@ class mywindow(QMainWindow):
         self.horse = Horse(*initial_min_maxes)
 
         self.run_experiments()
+
+        self.pushButtonSetWhole.clicked.connect(lambda x: self.set_params(params_big))
+        self.pushButtonSet1.clicked.connect(lambda x: self.set_params(params_1))
 
     def get_current_min_maxes(self):
         gen_int_min = self.gen_int_min.value()
@@ -114,18 +144,15 @@ class mywindow(QMainWindow):
                     coefficients = self.horse.norm_coefficients_OCKP
                     column_names = self.horse.OCKP_column_names
                 else:
-                    # TODO
                     full_results_table = self.horse.norm_full_results_table_OCKP_full
                     coefficients = self.horse.norm_coefficients_OCKP_full
                     column_names = self.horse.OCKP_column_names_full
             else:
                 if self.comboBoxTwo.currentIndex() == 0:
-                    # TODO
                     full_results_table = self.horse.nat_full_results_table_OCKP
                     coefficients = self.horse.nat_coefficients_OCKP
                     column_names = self.horse.OCKP_column_names
                 else:
-                    # TODO
                     full_results_table = self.horse.nat_full_results_table_OCKP_full
                     coefficients = self.horse.nat_coefficients_OCKP_full
                     column_names = self.horse.OCKP_column_names_full
@@ -146,7 +173,7 @@ class mywindow(QMainWindow):
 
             coefficients = np.round(coefficients, ROUND_TO)
             zero_coef = coefficients[0]
-            text_ends = [f'*{column_name}' for column_name in column_names[:-3]]
+            text_ends = [f'*{column_name}' for column_name in column_names[:-ADDED_COLUMNS_AMOUNT]]
             if self.comboBoxPreobr.currentIndex() == 0:
                 text_ends = text_ends[:-FACTORS_NUMBER] + [f'(x{factor_index})^2' for factor_index in range(1, FACTORS_NUMBER + 1)]
                 zero_coef = round(zero_coef - self.horse.S * sum(coefficients[-FACTORS_NUMBER:]), ROUND_TO)

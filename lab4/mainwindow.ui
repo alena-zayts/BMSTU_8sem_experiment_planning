@@ -292,7 +292,7 @@
       <double>0.100000000000000</double>
      </property>
      <property name="value">
-      <double>0.005000000000000</double>
+      <double>0.002000000000000</double>
      </property>
     </widget>
     <widget class="QLabel" name="label_10">
@@ -327,7 +327,7 @@
       <double>0.100000000000000</double>
      </property>
      <property name="value">
-      <double>0.010000000000000</double>
+      <double>0.003000000000000</double>
      </property>
     </widget>
     <widget class="QLabel" name="label_11">
@@ -433,7 +433,7 @@
       <double>0.100000000000000</double>
      </property>
      <property name="value">
-      <double>0.005000000000000</double>
+      <double>0.002000000000000</double>
      </property>
     </widget>
     <widget class="QLabel" name="label_28">
@@ -574,7 +574,7 @@
       <double>0.100000000000000</double>
      </property>
      <property name="value">
-      <double>0.010000000000000</double>
+      <double>0.003000000000000</double>
      </property>
     </widget>
    </widget>
@@ -609,7 +609,7 @@
       <double>1000000.000000000000000</double>
      </property>
      <property name="value">
-      <double>1000.000000000000000</double>
+      <double>100.000000000000000</double>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -1071,27 +1071,30 @@
      <rect>
       <x>210</x>
       <y>180</y>
-      <width>181</width>
+      <width>231</width>
       <height>22</height>
      </rect>
     </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
     <item>
      <property name="text">
-      <string>До двойных взаимодействий</string>
+      <string>Взаимодействия: только двойные</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>Все</string>
+      <string>Взаимодействия: все</string>
      </property>
     </item>
    </widget>
    <widget class="QComboBox" name="comboBoxPreobr">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>490</x>
       <y>180</y>
-      <width>201</width>
+      <width>231</width>
       <height>22</height>
      </rect>
     </property>
@@ -1105,6 +1108,45 @@
       <string>Без приведения подобных членов</string>
      </property>
     </item>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_4">
+    <property name="geometry">
+     <rect>
+      <x>1040</x>
+      <y>80</y>
+      <width>201</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Задать подготовленные значения</string>
+    </property>
+    <widget class="QPushButton" name="pushButtonSetWhole">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>131</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Загрузка [0.2; 0.8]</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonSet1">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>60</y>
+       <width>131</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Загрузка [0.75; 1.0]</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
