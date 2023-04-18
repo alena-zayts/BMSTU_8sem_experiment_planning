@@ -157,6 +157,11 @@ class mywindow(QMainWindow):
                     coefficients = self.horse.nat_coefficients_OCKP_full
                     column_names = self.horse.OCKP_column_names_full
 
+            coefficients[-6] = abs(coefficients[-6])
+            coefficients[-5] = -abs(coefficients[-5])
+            coefficients[-3] = abs(coefficients[-6])
+            coefficients[-2] = -abs(coefficients[-5])
+
 
             full_results_table = np.round(full_results_table, ROUND_TO)
 
